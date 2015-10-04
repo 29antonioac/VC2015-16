@@ -4,14 +4,53 @@
 \begin_header
 \textclass article
 \begin_preamble
-\usepackage{chngcntr}
-\counterwithout*{section}{part}
+\usepackage{xpatch}
+\xpretocmd{\part}{\setcounter{section}{0}}{}{}
+
+
+\usepackage{color}
+\definecolor{gray97}{gray}{.97}
+\definecolor{gray75}{gray}{.75}
+\definecolor{gray45}{gray}{.45}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+ 
+ 
+\usepackage{listings}
+\lstset{
+     frame=Ltb,
+     framerule=0pt,
+     aboveskip=0.5cm,
+     framextopmargin=3pt,
+     framexbottommargin=3pt,
+     framexleftmargin=0.3cm,
+     framesep=0pt,
+     rulesep=.4pt,
+     backgroundcolor=\color{gray97},
+     rulesepcolor=\color{black},
+     %
+     showstringspaces = false,
+     basicstyle=\footnotesize,           % the size of the fonts that are used for the code
+     commentstyle=\color{gray75},       % comment style
+     stringstyle=\color{dkgreen},         % string literal style
+     keywordstyle=\color{blue},     
+     %
+     numbers=left,
+     numbersep=15pt,
+     numberstyle=\tiny,
+     numberfirstline = false,
+     %
+     breaklines=true,
+     tabsize=2,
+     literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'\i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1 {ü}{{\"u}}1 {Ü}{{\"U}}1 {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {¿}{{?``}}1 {¡}{{!``}}1
+   }
 \end_preamble
 \use_default_options true
 \maintain_unincluded_children false
 \begin_local_layout
 Counter section
-        Within               part
+        Within               part*
 End
 \end_local_layout
 \language english
@@ -123,6 +162,13 @@ Diga el significado de los siguientes tipos OpenCV: 8UC1, 8UC2, 8UC3, 32SC1,
  almacenamiento en otro? 
 \end_layout
 
+\begin_layout Standard
+\begin_inset Newpage newpage
+\end_inset
+
+
+\end_layout
+
 \begin_layout Part*
 Ejercicios
 \end_layout
@@ -132,8 +178,45 @@ Escribir una función que lea una imagen en niveles de gris o en color (
  im=leeimagen(filename, flagColor)) 
 \end_layout
 
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "Sources/Ejercicio1.py"
+lstparams "language=Python"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+áéíóú
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Section
 Escribir una función que visualice una imagen (pintaI(im)) 
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "Sources/Ejercicio2.py"
+lstparams "language=Python"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Section
@@ -142,10 +225,32 @@ Escribir una función que visualice varias imágenes a la vez: pintaMI(vim).
  del mismo tipo: (nivel de gris, color, blanco-negro)? 
 \end_layout
 
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "Sources/Ejercicio3.py"
+lstparams "language=Python"
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Section
 Escribir una función que modifique el valor en una imagen de una lista de
  coordenadas de píxeles.
  
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "Sources/Ejercicio4.py"
+lstparams "language=Python"
+
+\end_inset
+
+
 \end_layout
 
 \end_body
