@@ -1,0 +1,152 @@
+#LyX 2.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 474
+\begin_document
+\begin_header
+\textclass article
+\begin_preamble
+\usepackage{chngcntr}
+\counterwithout*{section}{part}
+\end_preamble
+\use_default_options true
+\maintain_unincluded_children false
+\begin_local_layout
+Counter section
+        Within               part
+End
+\end_local_layout
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_math auto
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Práctica 0
+\end_layout
+
+\begin_layout Author
+Antonio Álvarez Caballero
+\end_layout
+
+\begin_layout Part*
+Cuestiones
+\end_layout
+
+\begin_layout Section
+¿Qué relación hay en OpenCV entre imágenes y matrices? Justificar la respuesta.
+\end_layout
+
+\begin_layout Section
+Diga el significado de los siguientes tipos OpenCV: 8UC1, 8UC2, 8UC3, 32SC1,
+ 32SC2, 32SC3, 32FC1, 32FC2, 32FC3.
+ ¿Cuáles de ellos están asociados a imágenes? Justificar la respuesta.
+ 
+\end_layout
+
+\begin_layout Section
+¿Qué relación existe entre cada tipo visual de una imagen: (color, grises,
+ blanco y negro) y los tipos de almacenamiento de OpenCV ? Justificar la
+ respuesta.
+\end_layout
+
+\begin_layout Section
+¿Es posible realizar operaciones entre imágenes de distinto tipo visual?
+ Justificar la respuesta.
+\end_layout
+
+\begin_layout Section
+¿Cuál es la orden OpenCV que permite transformar el tipo de almacenamiento
+ de una matriz en otro distinto? 
+\end_layout
+
+\begin_layout Section
+¿Cuál es la orden OpenCV que permite transformar el tipo visual de una imagen
+ en otro distinto? ¿Por qué es distinta de la que transforma un tipo de
+ almacenamiento en otro? 
+\end_layout
+
+\begin_layout Part*
+Ejercicios
+\end_layout
+
+\begin_layout Section
+Escribir una función que lea una imagen en niveles de gris o en color (
+ im=leeimagen(filename, flagColor)) 
+\end_layout
+
+\begin_layout Section
+Escribir una función que visualice una imagen (pintaI(im)) 
+\end_layout
+
+\begin_layout Section
+Escribir una función que visualice varias imágenes a la vez: pintaMI(vim).
+ (vim será una secuencia de imágenes) ¿Qué pasa si las imágenes no son todas
+ del mismo tipo: (nivel de gris, color, blanco-negro)? 
+\end_layout
+
+\begin_layout Section
+Escribir una función que modifique el valor en una imagen de una lista de
+ coordenadas de píxeles.
+ 
+\end_layout
+
+\end_body
+\end_document
