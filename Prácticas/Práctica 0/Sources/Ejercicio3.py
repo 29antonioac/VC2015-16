@@ -7,7 +7,7 @@ import numpy as np
 def leeImagen(nombre, flagColor):
     if flagColor == True:
         flag = cv2.IMREAD_COLOR
-    else
+    else:
         flag = cv2.IMREAD_GRAYSCALE
     return cv2.imread(nombre,flag)
 
