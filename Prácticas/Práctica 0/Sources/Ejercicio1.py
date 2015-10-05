@@ -5,12 +5,14 @@ import cv2
 import numpy as np
 
 def leeImagen(nombre, flagColor):
-    return cv2.imread(nombre,flagColor)
+    if flagColor == True:
+        flag = cv2.IMREAD_COLOR
+    else
+        flag = cv2.IMREAD_GRAYSCALE
+    return cv2.imread(nombre,flag)
 
 # Aquí cargamos imágenes con varios flags
-# img = leeImagen("lena.jpg",cv2.IMREAD_GRAYSCALE)
-# img = leeImagen("lena.jpg",cv2.IMREAD_COLOR)
-img = leeImagen("lena.jpg",cv2.IMREAD_UNCHANGED)
+img = leeImagen("lena.jpg",True)
 
 cv2.imshow("Lena",img)
 cv2.waitKey(0)

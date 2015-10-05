@@ -5,7 +5,11 @@ import cv2
 import numpy as np
 
 def leeImagen(nombre, flagColor):
-    return cv2.imread(nombre,flagColor)
+    if flagColor == True:
+        flag = cv2.IMREAD_COLOR
+    else
+        flag = cv2.IMREAD_GRAYSCALE
+    return cv2.imread(nombre,flag)
 
 def pintaImagen(nombre, imagen):
     cv2.imshow(nombre, imagen)
@@ -19,8 +23,8 @@ def modificaPixels(imagen,pixels,valores):
     for i in range(len(pixels)):
         imagen[pixels[i][0],pixels[i][1]] = valores[i]
 
-# Aquí cargamos imágenes con varios flags
-img = leeImagen("lena.jpg",cv2.IMREAD_COLOR)
+# Cargar imagen
+img = leeImagen("lena.jpg",True)
 height, width = img.shape[:2]
 pixels = [(y,x) for x in range(width) for y in range(height) if y % 2 != 0]
 valores = [[255,255,255] for i in range(len(pixels))]

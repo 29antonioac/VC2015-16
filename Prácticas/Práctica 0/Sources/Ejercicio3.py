@@ -5,7 +5,11 @@ import cv2
 import numpy as np
 
 def leeImagen(nombre, flagColor):
-    return cv2.imread(nombre,flagColor)
+    if flagColor == True:
+        flag = cv2.IMREAD_COLOR
+    else
+        flag = cv2.IMREAD_GRAYSCALE
+    return cv2.imread(nombre,flag)
 
 def pintaSecuenciaImagenes(imagenes):
     # El ancho total será la suma de los anchos de todas las imágenes
@@ -31,5 +35,5 @@ def pintaSecuenciaImagenes(imagenes):
     cv2.destroyAllWindows()
 
 # Aquí cargamos imágenes con varios flags
-imagenes = [leeImagen("lena.jpg",cv2.IMREAD_COLOR) for i in range(5)]
+imagenes = [leeImagen("lena.jpg",True) for i in range(5)]
 pintaSecuenciaImagenes(imagenes)
