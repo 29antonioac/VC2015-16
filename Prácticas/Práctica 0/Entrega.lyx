@@ -194,8 +194,8 @@ Asociados a imágenes son todos excepto los que tienen 2 canales.
 \begin_layout Standard
 El primer número, el de bits que contiene cada píxel, se utiliza para el
  número de colores que puede albergar.
- A más cantidad de píxels mayor variedad de colores podremos albergar en
- nuestra imagen.
+ A más cantidad de píxels mayor variedad de información podremos albergar
+ en nuestra imagen.
 \end_layout
 
 \begin_layout Standard
