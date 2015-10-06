@@ -7,6 +7,10 @@
 \usepackage{xpatch}
 \xpretocmd{\part}{\setcounter{section}{0}}{}{}
 
+\usepackage{sectsty}
+
+\sectionfont{\fontsize{12}{15}\selectfont}
+
 
 \usepackage{color}
 \definecolor{gray97}{gray}{.97}
@@ -105,8 +109,8 @@ End
 \end_index
 \secnumdepth 3
 \tocdepth 3
-\paragraph_separation indent
-\paragraph_indentation default
+\paragraph_separation skip
+\defskip smallskip
 \quotes_language english
 \papercolumns 1
 \papersides 1
@@ -136,11 +140,49 @@ Cuestiones
 ¿Qué relación hay en OpenCV entre imágenes y matrices? Justificar la respuesta.
 \end_layout
 
+\begin_layout Standard
+OpenCV (y la mayoría de software por no decir todo) utilizan matrices como
+ estructura de datos para almacenar imágenes.
+ Esto lo consiguen asignando cada píxel a una posición de la matriz, y en
+ ella un vector de 1, 3 o 4 valores dependiendo del número de canales de
+ la imagen.
+ 
+\end_layout
+
 \begin_layout Section
 Diga el significado de los siguientes tipos OpenCV: 8UC1, 8UC2, 8UC3, 32SC1,
  32SC2, 32SC3, 32FC1, 32FC2, 32FC3.
  ¿Cuáles de ellos están asociados a imágenes? Justificar la respuesta.
  
+\end_layout
+
+\begin_layout Standard
+El primer dígito indica los bits que ocupa cada píxel.
+ La primera letra indica el tipo.
+ 
+\emph on
+U
+\emph default
+ de unsigned char, 
+\emph on
+S
+\emph default
+ de signed int y 
+\emph on
+F
+\emph default
+ de float (podría ser un double).
+ Y por último 
+\emph on
+Cx
+\emph default
+ indica el número de canales de la imagen.
+\end_layout
+
+\begin_layout Standard
+Asociados a imágenes son todos excepto los que tienen 2 canales.
+ No hay tipos de imagen con 2 canales y por tanto OpenCV no puede mostrarlos.
+ Los demás los muestra OpenCV sin problema.
 \end_layout
 
 \begin_layout Section
@@ -149,9 +191,33 @@ Diga el significado de los siguientes tipos OpenCV: 8UC1, 8UC2, 8UC3, 32SC1,
  respuesta.
 \end_layout
 
+\begin_layout Standard
+El primer número, el de bits que contiene cada píxel, se utiliza para el
+ número de colores que puede albergar.
+ A más cantidad de píxels mayor variedad de colores podremos albergar en
+ nuestra imagen.
+\end_layout
+
+\begin_layout Standard
+El número de canales nos permite guardar más información para cada píxel:
+ si usamos un solo canal, sólo podremos albergar imágenes en blanco y negro
+ o en escala de grises.
+ En cambio, utilizando tres canales podremos albergar imágenes RGB.
+ Si utilizáramos 4 podríamos usar el canal 
+\emph on
+alpha
+\emph default
+ para la transparencia.
+\end_layout
+
 \begin_layout Section
 ¿Es posible realizar operaciones entre imágenes de distinto tipo visual?
  Justificar la respuesta.
+\end_layout
+
+\begin_layout Standard
+No, ya que no podemos realizar operaciones con matrices de distinto tamaño
+ a no ser que las transformemos antes.
 \end_layout
 
 \begin_layout Section
@@ -159,10 +225,73 @@ Diga el significado de los siguientes tipos OpenCV: 8UC1, 8UC2, 8UC3, 32SC1,
  de una matriz en otro distinto? 
 \end_layout
 
+\begin_layout Standard
+La orden buscada es 
+\emph on
+void convertTo(OutputArray img, int rtype, double alpha = 1, double beta
+ = 0)
+\emph default
+.
+ Es un método de la clase Mat para convertir al tipo 
+\emph on
+rtype
+\emph default
+ y guardar en 
+\emph on
+img
+\emph default
+.
+ 
+\emph on
+alpha 
+\emph default
+es un parámetro de escala opcional y 
+\emph on
+beta
+\emph default
+ de traslación.
+\end_layout
+
 \begin_layout Section
 ¿Cuál es la orden OpenCV que permite transformar el tipo visual de una imagen
  en otro distinto? ¿Por qué es distinta de la que transforma un tipo de
  almacenamiento en otro? 
+\end_layout
+
+\begin_layout Standard
+La función buscada es 
+\emph on
+void cvtColor(inputArray src, OutputArray Dst, int code, int dstCn = 0)
+ 
+\emph default
+.
+ Transforma la imagen 
+\emph on
+src
+\emph default
+ en 
+\emph on
+dst
+\emph default
+ al tipo visual 
+\emph on
+code
+\emph default
+.
+ El parámetro 
+\emph on
+dstCn
+\emph default
+ es el número de canales de la nueva imagen, que si es 0 se calculará automática
+mente.
+\end_layout
+
+\begin_layout Standard
+Estas funciones son distintas ya que, aún teniendo la misma cantidad de
+ información, dos imágenes con tipo visual RBG y HSV no son iguales.
+ Almacenan la misma cantidad de información pero su codificación interna
+ es distinta: en una son valores de Rojo, Azul y Verde y en la otra Tono,
+ Saturación y Valor.
 \end_layout
 
 \begin_layout Standard
@@ -186,38 +315,6 @@ Escribir una función que lea una imagen en niveles de gris o en color (
 LatexCommand lstinputlisting
 filename "Sources/Ejercicio1.py"
 lstparams "language=Python"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-inputminted{python}{/home/antonio/Git/VC2015-16/Prácticas/Práctica 0/Sources/Eje
-rcicio1.py}
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset listings
-inline false
-status open
-
-\begin_layout Plain Layout
-
-áéíóú
-\end_layout
 
 \end_inset
 
@@ -267,34 +364,6 @@ Escribir una función que modifique el valor en una imagen de una lista de
 LatexCommand lstinputlisting
 filename "Sources/Ejercicio4.py"
 lstparams "language=Python"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-begin{minted}{python}
-\end_layout
-
-\begin_layout Plain Layout
-
-def boring(args = None) : pass
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-end{minted}
-\end_layout
 
 \end_inset
 

@@ -24,6 +24,10 @@ def pintaSecuenciaImagenes(imagenes):
     ancho_anterior = 0
     for indice_imagen in range(len(imagenes)):
         imagen_actual = imagenes[indice_imagen]
+        # Si no están a color, las convertimos
+        if len(imagen_actual.shape) < 3:
+            imagen_actual = cv2.cvtColor(imagen_actual,cv2.COLOR_GRAY2RGB)
+
         for indice_fila in range(imagen_actual.shape[0]):
             for indice_columna in range(imagen_actual.shape[1]):
                 tira_imagenes[indice_fila][indice_columna + ancho_anterior] = imagen_actual[indice_fila][indice_columna]
@@ -35,5 +39,6 @@ def pintaSecuenciaImagenes(imagenes):
     cv2.destroyAllWindows()
 
 # Aquí cargamos imágenes con varios flags
-imagenes = [leeImagen("lena.jpg",True) for i in range(5)]
+imagenes = [leeImagen("lena.jpg",True) for i in range(3)]
+imagenes.append(leeImagen("lena.jpg",False))
 pintaSecuenciaImagenes(imagenes)
