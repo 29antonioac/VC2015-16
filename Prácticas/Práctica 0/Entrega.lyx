@@ -202,7 +202,8 @@ El primer número, el de bits que contiene cada píxel, se utiliza para el
 El número de canales nos permite guardar más información para cada píxel:
  si usamos un solo canal, sólo podremos albergar imágenes en blanco y negro
  o en escala de grises.
- En cambio, utilizando tres canales podremos albergar imágenes RGB.
+ En cambio, utilizando tres canales podremos albergar imágenes RGB o HSV
+ entre otras.
  Si utilizáramos 4 podríamos usar el canal 
 \emph on
 alpha
