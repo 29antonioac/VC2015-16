@@ -217,8 +217,11 @@ alpha
 \end_layout
 
 \begin_layout Standard
-No, ya que no podemos realizar operaciones con matrices de distinto tamaño
- a no ser que las transformemos antes.
+Sí, ya que el tipo visual HSV (Tono, Saturación, Valor) tiene el mismo tipo
+ de almacenamiento que el RGB (Rojo, Verde, Azul), y por tanto las matrices
+ que almacenan imágenes de estos tipos tienen las mismas dimensiones.
+ Eso sí, no tendría sentido realizar estas operaciones, ya que HSV no tiene
+ nada que ver con RGB.
 \end_layout
 
 \begin_layout Section
