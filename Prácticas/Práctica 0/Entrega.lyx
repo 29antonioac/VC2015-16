@@ -15,6 +15,8 @@
 \definecolor{dkgreen}{rgb}{0,0.6,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
 \definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\usepackage[outputdir=".tmp"]{minted}
  
  
 \usepackage{listings}
@@ -32,6 +34,7 @@
      %
      showstringspaces = false,
      basicstyle=\footnotesize,           % the size of the fonts that are used for the code
+     %basicstyle=\ttm
      commentstyle=\color{gray75},       % comment style
      stringstyle=\color{dkgreen},         % string literal style
      keywordstyle=\color{blue},     
@@ -190,6 +193,23 @@ lstparams "language=Python"
 \end_layout
 
 \begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+inputminted{python}{/home/antonio/Git/VC2015-16/Prácticas/Práctica 0/Sources/Eje
+rcicio1.py}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
 \begin_inset listings
 inline false
 status open
@@ -247,6 +267,34 @@ Escribir una función que modifique el valor en una imagen de una lista de
 LatexCommand lstinputlisting
 filename "Sources/Ejercicio4.py"
 lstparams "language=Python"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{minted}{python}
+\end_layout
+
+\begin_layout Plain Layout
+
+def boring(args = None) : pass
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{minted}
+\end_layout
 
 \end_inset
 
