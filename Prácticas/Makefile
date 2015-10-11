@@ -35,14 +35,14 @@ comp_version		:= -std=c++11
 # endif
 
 # gl_libs             := $(gl_libs_base) # $(gl_lib_file)
-other_ld_libs       := $(pkg-config --libs opencv)
+other_ld_libs       := `pkg-config --libs opencv`
 gtk_c_flags         :=
 gtk_ld_libs         :=
 
 
 units               := $(basename $(units_ext))
 objs                := $(addprefix $(OBJ)/, $(addsuffix .o, $(notdir $(units))))
-c_flags             := -I/usr/include/opencv2 $(pkg-config --cflags opencv) -I $(INC) -I $(SRC) $(src_dir) $(opt_dbg_flag) $(exit_first) $(warn_all) $(gtk_c_flags) $(comp_version)
+c_flags             := `pkg-config --cflags opencv` -I $(INC) -I $(SRC) $(src_dir) $(opt_dbg_flag) $(exit_first) $(warn_all) $(gtk_c_flags) $(comp_version)
 ld_libs             := $(gtk_ld_libs) $(gl_libs) $(other_ld_libs)
 
 INTERACTIVE := $(shell [ -t 0 ] && echo 1)
