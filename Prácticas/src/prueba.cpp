@@ -1,4 +1,4 @@
-#include "../Modulos/headers/image.hpp"
+#include "../inc/image.hpp"
 #include <iostream>
 
 
