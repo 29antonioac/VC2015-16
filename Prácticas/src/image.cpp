@@ -1,5 +1,7 @@
 #include "../inc/image.hpp"
 
+#include <opencv2/imgproc.hpp>
+
 // #include <iostream>
 // using std::cout;
 // using std::endl;
@@ -7,11 +9,12 @@
 int Image::num_images = 0;
 
 
-Image::Image(string path, int flag)
+Image::Image(string path, bool flag)
 {
   num_images++;
   ID = num_images;
-  image = imread(path,flag);
+  int cv_flag = (flag) ? CV_LOAD_IMAGE_COLOR : CV_LOAD_IMAGE_GRAYSCALE;
+  image = imread(path,cv_flag);
   name = SplitFilename(path);
 }
 
@@ -43,6 +46,16 @@ Image::Image(const vector<Image*> & sequence, unsigned int rows, unsigned int co
 
   if (sequence.size() == rows * cols)
   {
+    // Convert grayscale images to color
+    for (Image* pimg: sequence)
+    {
+      if (pimg->image.channels() == 1)
+      {
+        Mat out;
+        cvtColor(pimg->image,out,CV_GRAY2RGB);
+        pimg->image = out;
+      }
+    }
 
     // Compute the resulting canvas
     max_rows = 0;

@@ -19,7 +19,7 @@ private:
   static int num_images;
   int ID;
 public:
-  Image(string path, int flag);
+  Image(string path, bool flag);
   Image(int rows, int cols);
   Image(const Image& img);
   Image(const vector<Image*> & sequence, unsigned int rows, unsigned int cols);
