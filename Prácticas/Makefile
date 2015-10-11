@@ -7,8 +7,8 @@
 ########################################################################
 
 .SUFFIXES:
-# .PHONY: start, exec, all, compile, clean, tar
-.PHONY: all, compile, clean, tar
+.PHONY: start, exec, all, compile, clean, tar
+# .PHONY: all, compile, clean, tar
 
 INC					:= ./inc
 BIN					:= ./bin
