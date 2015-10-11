@@ -1,22 +1,15 @@
 #include "../inc/image.hpp"
 
-// #include <opencv2/core/core.hpp>
-// #include <opencv2/highgui/highgui.hpp>
-// #include <string>
-
-
-using namespace cv;
-// using cv::readImage;
 
 Image::Image(string path, int flag)
 {
-  image = readImage(path,flag);
+  image = imread(path,flag);
   name = SplitFilename(path);
 }
 
-Image::Image(const Image::Image& img)
+Image::Image(const Image& img)
 {
-  image = img.clone();
+  image = img.image.clone();
   name = img.name;
 }
 
