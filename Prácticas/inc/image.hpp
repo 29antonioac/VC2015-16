@@ -22,7 +22,7 @@ public:
   Image(string path, int flag);
   Image(int rows, int cols);
   Image(const Image& img);
-  Image(const vector<Image> & sequence, unsigned int rows, unsigned int cols);
+  Image(const vector<Image*> & sequence, unsigned int rows, unsigned int cols);
 
   void paint();
   void getPixel(int x, int y);

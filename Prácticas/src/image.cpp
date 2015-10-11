@@ -31,7 +31,7 @@ Image::Image(const Image& img)
   name = img.name;
 }
 
-Image::Image(const vector<Image> & sequence, unsigned int rows, unsigned int cols)
+Image::Image(const vector<Image*> & sequence, unsigned int rows, unsigned int cols)
 {
   int max_rows = 0;
   int sum_rows = 0;
@@ -57,8 +57,8 @@ Image::Image(const vector<Image> & sequence, unsigned int rows, unsigned int col
       sum_cols = 0;
       for (int col_image = 0; col_image < cols; col_image++)
       {
-        max_rows = std::max(sequence.at(row_image*cols+col_image).image.rows,max_rows);
-        sum_cols += sequence.at(row_image*cols+col_image).image.cols;
+        max_rows = std::max(sequence.at(row_image*cols+col_image)->image.rows,max_rows);
+        sum_cols += sequence.at(row_image*cols+col_image)->image.cols;
       }
       max_cols = std::max(max_cols,sum_cols);
       sum_rows += max_rows;
@@ -94,7 +94,7 @@ Image::Image(const vector<Image> & sequence, unsigned int rows, unsigned int col
       {
         image_index = row_image*cols+col_image;
         image_index_prev_row = image_index - cols;
-        Mat actual_image = sequence.at(image_index).image;
+        Mat actual_image = sequence.at(image_index)->image;
 
         for (int actual_row = 0; actual_row < actual_image.rows; actual_row++)
         {

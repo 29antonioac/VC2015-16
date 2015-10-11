@@ -8,15 +8,15 @@ int main(int argc, char const *argv[]) {
   prueba.paint();
   prueba2.paint();
 
-  vector<Image> secuencia;
-  secuencia.push_back(prueba);
-  secuencia.push_back(prueba2);
-  secuencia.push_back(prueba);
-  secuencia.push_back(prueba2);
-  secuencia.push_back(prueba);
-  secuencia.push_back(prueba2);
-  secuencia.push_back(prueba2);
-  secuencia.push_back(prueba2);
+  vector<Image*> secuencia;
+  secuencia.push_back(&prueba);
+  secuencia.push_back(&prueba2);
+  secuencia.push_back(&prueba);
+  secuencia.push_back(&prueba2);
+  secuencia.push_back(&prueba);
+  secuencia.push_back(&prueba2);
+  secuencia.push_back(&prueba2);
+  secuencia.push_back(&prueba2);
 
 
 
