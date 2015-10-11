@@ -45,6 +45,8 @@ objs                := $(addprefix $(OBJ)/, $(addsuffix .o, $(notdir $(units))))
 c_flags             := -I/usr/include/opencv2 $(pkg-config --cflags opencv) -I $(INC) -I $(SRC) $(src_dir) $(opt_dbg_flag) $(exit_first) $(warn_all) $(gtk_c_flags) $(comp_version)
 ld_libs             := $(gtk_ld_libs) $(gl_libs) $(other_ld_libs)
 
+INTERACTIVE := $(shell [ -t 0 ] && echo 1)
+
 start:
 	@make --no-print-directory exec
 
@@ -62,31 +64,64 @@ compile: $(target_name)
 	@make --no-print-directory $(target_name)
 
 $(target_name) : $(objs) | $(BIN)
-	@echo `tput bold`---------------------------------------------------------------
+	@if [ -n "$(INTERACTIVE)" ]; then\
+        echo `tput bold`---------------------------------------------------------------;\
+	else\
+		echo ---------------------------------------------------------------;\
+  fi
+
 	@echo "Enlazando      :" $(target_name)
 	@echo "Unidades(ext)  :" $(units_ext)
 	@echo "Objetos        :" $(objs)
-	@tput sgr0
+
+	@if [ -n "$(INTERACTIVE)" ]; then\
+		tput sgr0;\
+	fi
 	g++ -o $(target_name) $(objs) $(ld_libs)
 	@echo ---------------------------------------------------------------
 
 
 $(OBJ)/%.o: $(SRC)/%.cpp $(headers) | $(OBJ)
-	@echo `tput bold`---------------------------------------------------------------
+
+	@if [ -n "$(INTERACTIVE)" ]; then\
+				echo `tput bold`---------------------------------------------------------------;\
+	else\
+		echo ---------------------------------------------------------------;\
+	fi
+
 	@echo Compilando: $(notdir $<)
-	@tput sgr0
+
+	@if [ -n "$(INTERACTIVE)" ]; then\
+		tput sgr0;\
+	fi
 	@g++ $(c_flags) -c $< -o $@
 
 $(OBJ)/%.o: $(SRC)/%.cc $(headers) | $(OBJ)
-	@echo `tput bold`---------------------------------------------------------------
+
+	@if [ -n "$(INTERACTIVE)" ]; then\
+				echo `tput bold`---------------------------------------------------------------;\
+	else\
+		echo ---------------------------------------------------------------;\
+	fi
 	@echo Compilando: $(notdir $<)
-	@tput sgr0
+
+	@if [ -n "$(INTERACTIVE)" ]; then\
+		tput sgr0;\
+	fi
 	@g++ $(c_flags) -c $< -o $@
 
 $(OBJ)/%.o: $(SRC)/%.c $(headers) | $(OBJ)
-	@echo `tput bold`---------------------------------------------------------------
+
+	@if [ -n "$(INTERACTIVE)" ]; then\
+				echo `tput bold`---------------------------------------------------------------;\
+	else\
+		echo ---------------------------------------------------------------;\
+	fi
 	@echo Compilando: $(notdir $<)
-	@tput sgr0
+
+	@if [ -n "$(INTERACTIVE)" ]; then\
+		tput sgr0;\
+	fi
 	@g++ $(c_flags) -c $< -o $@
 
 # Creation of binary directory
