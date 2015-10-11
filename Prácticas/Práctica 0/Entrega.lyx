@@ -7,6 +7,8 @@
 \usepackage{xpatch}
 \xpretocmd{\part}{\setcounter{section}{0}}{}{}
 
+\date {}
+
 \usepackage{sectsty}
 
 \sectionfont{\fontsize{12}{15}\selectfont}
@@ -183,6 +185,7 @@ Cx
 Asociados a imágenes son todos excepto los que tienen 2 canales.
  No hay tipos de imagen con 2 canales y por tanto OpenCV no puede mostrarlos.
  Los demás los muestra OpenCV sin problema.
+ 
 \end_layout
 
 \begin_layout Section
@@ -217,9 +220,11 @@ alpha
 \end_layout
 
 \begin_layout Standard
-Sí, ya que el tipo visual HSV (Tono, Saturación, Valor) tiene el mismo tipo
- de almacenamiento que el RGB (Rojo, Verde, Azul), y por tanto las matrices
- que almacenan imágenes de estos tipos tienen las mismas dimensiones.
+Sí, ya que distintos tipos visuales pueden utilizarl el mismo tipo de almacenami
+ento.
+ Por ejemplo, el tipo visual HSV (Tono, Saturación, Valor) tiene el mismo
+ tipo de almacenamiento que el RGB (Rojo, Verde, Azul), y por tanto las
+ matrices que almacenan imágenes de estos tipos tienen las mismas dimensiones.
  Eso sí, no tendría sentido realizar estas operaciones, ya que HSV no tiene
  nada que ver con RGB.
 \end_layout
@@ -309,6 +314,13 @@ Estas funciones son distintas ya que, aún teniendo la misma cantidad de
 Ejercicios
 \end_layout
 
+\begin_layout Standard
+Estos ejercicios están implementados en Python (cuidando que sea compatible
+ con Python2 y Python3 sin problema), pero a partir de la práctica 1 todo
+ el código estará en C++.
+ 
+\end_layout
+
 \begin_layout Section
 Escribir una función que lea una imagen en niveles de gris o en color (
  im=leeimagen(filename, flagColor)) 
@@ -320,6 +332,25 @@ LatexCommand lstinputlisting
 filename "Sources/Ejercicio1.py"
 lstparams "language=Python"
 
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+\align center
+\begin_inset Graphics
+	filename Sources/Salida1.png
+	scale 70
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage newpage
 \end_inset
 
 
@@ -340,6 +371,25 @@ lstparams "language=Python"
 
 \end_layout
 
+\begin_layout Standard
+\noindent
+\align center
+\begin_inset Graphics
+	filename Sources/Salida1.png
+	scale 70
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage newpage
+\end_inset
+
+
+\end_layout
+
 \begin_layout Section
 Escribir una función que visualice varias imágenes a la vez: pintaMI(vim).
  (vim será una secuencia de imágenes) ¿Qué pasa si las imágenes no son todas
@@ -347,11 +397,32 @@ Escribir una función que visualice varias imágenes a la vez: pintaMI(vim).
 \end_layout
 
 \begin_layout Standard
+\noindent
+\align center
 \begin_inset CommandInset include
 LatexCommand lstinputlisting
 filename "Sources/Ejercicio3.py"
 lstparams "language=Python"
 
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+\align center
+\begin_inset Graphics
+	filename Sources/Salida2.png
+	scale 60
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage newpage
 \end_inset
 
 
@@ -368,6 +439,18 @@ Escribir una función que modifique el valor en una imagen de una lista de
 LatexCommand lstinputlisting
 filename "Sources/Ejercicio4.py"
 lstparams "language=Python"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+\align center
+\begin_inset Graphics
+	filename Sources/Salida3.png
+	scale 60
 
 \end_inset
 
