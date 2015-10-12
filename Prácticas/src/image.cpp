@@ -63,7 +63,8 @@ Image::Image(const vector<Image*> & sequence, unsigned int rows, unsigned int co
     max_cols = 0;
     sum_cols = 0;
 
-    vector<int> row_offsets;
+
+    vector<int> row_offsets; // Max number of rows from each image row
 
     for (int row_image = 0; row_image < rows; row_image++)
     {
@@ -138,4 +139,20 @@ void Image::paint()
   string window_name = std::to_string(ID) + "-" + name;
   namedWindow(window_name,WINDOW_AUTOSIZE);
   imshow(window_name,image);
+}
+
+void Image::setPixels(const vector<Point> & pixel_list, const vector<Vec3b> & value_list)
+{
+  for (int i = 0; i < pixel_list.size(); i++)
+  {
+    image.at<Vec3b>(pixel_list.at(i)) = value_list.at(i % value_list.size());
+  }
+}
+
+void Image::setPixels(const vector<Point> & pixel_list, const vector<uchar> & value_list)
+{
+  for (int i = 0; i < pixel_list.size(); i++)
+  {
+    image.at<uchar>(pixel_list.at(i)) = value_list.at(i % value_list.size());
+  }
 }

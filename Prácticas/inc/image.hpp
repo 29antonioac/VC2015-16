@@ -26,7 +26,9 @@ public:
 
   void paint();
   void getPixel(int x, int y);
-  void setPixels();
+
+  void setPixels(const vector<Point> & pixel_list, const vector<Vec3b> & value_list);
+  void setPixels(const vector<Point> & pixel_list, const vector<uchar> & value_list);
 
 
 
