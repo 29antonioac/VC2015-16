@@ -2,7 +2,14 @@
 #define __UTILS_HPP__
 
 #include <string>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
-std::string SplitFilename (const std::string& str);
+using cv::Mat;
+using std::string;
+
+string SplitFilename (const string& str);
+Mat gaussianMask(float sigma);
+
 
 #endif
