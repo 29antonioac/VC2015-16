@@ -3,5 +3,6 @@
 *.lyx#
 *.lyx~
 *.log
+*.out
 Prácticas/obj/
 Prácticas/bin/
