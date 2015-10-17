@@ -4,5 +4,8 @@
 *.lyx~
 *.log
 *.out
+*.gz
+*.fls
+*.fdb_latexmk
 Prácticas/obj/
 Prácticas/bin/
