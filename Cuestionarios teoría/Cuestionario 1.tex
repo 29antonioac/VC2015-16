@@ -7,17 +7,17 @@
 
 %Importante que esta sea la última órden del preámbulo
 \usepackage{hyperref}
-\hypersetup{
-  pdftitle={Cuestionario de teoría 1},
-  pdfauthor={Antonio Álvarez Caballero},
-  unicode,
-  plainpages=false,
-  colorlinks,
-  citecolor=black,
-  filecolor=black,
-  linkcolor=black,
-  urlcolor=black,
-}
+% \hypersetup{
+%   pdftitle={Cuestionario de teoría 1},
+%   pdfauthor={Antonio Álvarez Caballero},
+%   unicode,
+%   plainpages=false,
+%   colorlinks,
+%   citecolor=black,
+%   filecolor=black,
+%   linkcolor=black,
+%   urlcolor=black,
+% }
 \newcommand\fnurl[2]{%
   \href{#2}{#1}\footnote{\url{#2}}%
 }
@@ -58,10 +58,10 @@
   tabsize=3
 }
 
-\title{Cuestionario de teoría 1 }
-\author{Antonio Álvarez Caballero\\
-    \href{mailto:analca3@correo.ugr.es}{analca3@correo.ugr.es}}
-\date{\today}
+% \title{Cuestionario de teoría 1}
+% \author{Antonio Álvarez Caballero\\
+%     \href{mailto:analca3@correo.ugr.es}{analca3@correo.ugr.es}}
+% \date{\today}
 
 \theoremstyle{definition}
 \newtheorem{ejercicio}{Ejercicio}
@@ -148,7 +148,10 @@
    \def\gt{>}
    \def\lt{<}
    % Document parameters
-   \title{Untitled1}
+   \title{Cuestionario de teoría 1}
+   \author{Antonio Álvarez Caballero\\
+       \href{mailto:analca3@correo.ugr.es}{analca3@correo.ugr.es}}
+   \date{\today}
 
 
 
@@ -260,7 +263,21 @@
    % Prevent overflowing lines due to hard-to-break entities
    \sloppy
    % Setup hyperref package
+  %  \hypersetup{
+  %    pdftitle={Cuestionario de teoría 1},
+  %    pdfauthor={Antonio Álvarez Caballero},
+  %    unicode,
+  %    plainpages=false,
+  %    colorlinks,
+  %    citecolor=black,
+  %    filecolor=black,
+  %    linkcolor=black,
+  %    urlcolor=black,
+  %  }
    \hypersetup{
+     pdftitle={Cuestionario de teoría 1},
+     pdfauthor={Antonio Álvarez Caballero},
+     unicode,
      breaklinks=true,  % so long urls are correctly broken across lines
      colorlinks=true,
      urlcolor=blue,
@@ -294,7 +311,7 @@
 \renewcommand*{\sqrt}[2][\ ]{\oldsqrt[#1]{#2} }
 \makeatother
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
 
@@ -307,15 +324,24 @@
   \end{cuestion}
 
   \begin{solucion}
-    solucion1
+    La visión por computador busca extraer información acerca de una imagen.
+    Esta información puede ser identificar objetos en la imagen, contornos,
+    colores, o incluso mensajes (esteganografía).
   \end{solucion}
 
   \begin{cuestion}
-      ¿Una máscara de convolución para imágenes debe ser siempre una matriz 2D? ¿Tiene sentido considerar máscaras definidas a partir de matrices de varios canales como p.e. el tipo de OpenCV CV\_8UC3? Discutir y justificar la respuesta.
+      ¿Una máscara de convolución para imágenes debe ser siempre una matriz 2D?
+       ¿Tiene sentido considerar máscaras definidas a partir de matrices de varios
+        canales como p.e. el tipo de OpenCV CV\_8UC3? Discutir y justificar la respuesta.
   \end{cuestion}
 
   \begin{solucion}
-      solucion2
+      No, ya que hemos visto que muchas máscaras son separables por filas y columnas.
+      Así conseguimos una complejidad computacional menor, y por tanto deberíamos
+      buscar siempre máscaras separables.
+      Sí, ya que podríamos aplicar una máscara a cada canal de color, modificando
+      cada uno de una manera distinta. Aunque separando los canales conseguiríamos
+      el mismo efecto.
   \end{solucion}
 
   \begin{cuestion}
@@ -478,7 +504,16 @@ Documentation can be found at http://docs.sympy.org/dev
   \end{cuestion}
 
   \begin{solucion}
-     	contenidos...
+     	Lo clásico para reducir imágenes es lo que en programas de edición fotográfica
+      se conoce como \textit{Reducir colores}. Esta operación cambia el tipo de almacenamiento
+      de la imagen, pasando por ejemplo de CV\_32FC3 a CV\_8UC3, reduciendo así el
+      tamaño de cada píxel. Esto puede desembocar en una pérdida de gama de colores.
+
+      La opción general es la compresión de imágenes. Existen técnicas de compresión
+      con pérdida y sin pérdida. Entre las opciones de compresión sin pérdida
+      se encuentran \textit{RLE} y \textit{Deflación}, mientras que en las opciones con pérdida
+      se encuentran lo arriba comentado como \textit{reducción de colores}, \textit{codificación
+      por transformación} o \textit{compresión fractal}
   \end{solucion}
   \begin{cuestion}
      	¿Qué información de la imagen original se conserva cuando vamos
