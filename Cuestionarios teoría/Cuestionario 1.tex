@@ -325,9 +325,12 @@
   \end{cuestion}
 
   \begin{solucion}
-    La visión por computador busca extraer información acerca de una imagen.
-    Esta información puede ser identificar objetos en la imagen, contornos,
-    colores, o incluso mensajes (esteganografía).
+    La visión por computador busca extraer información acerca de una imagen,a la
+    que llamamos \textit{significado}.
+    Esta información puede ser de tipo semántica, como identificar objetos en
+    la imagen o reconocer caras, o de tipo geométrica, como contornos, formas, distancias
+    o perspectiva. También se puede usar para almacenar o extraer mensajes,
+    que es lo que llamamos \textit{esteganografía}.
   \end{solucion}
 
   \begin{cuestion}
@@ -339,10 +342,12 @@
   \begin{solucion}
       No, ya que hemos visto que muchas máscaras son separables por filas y columnas.
       Así conseguimos una complejidad computacional menor, y por tanto deberíamos
-      buscar siempre máscaras separables.
+      buscar siempre este tipo de máscaras. La Gaussiana, por ejemplo, es separable. \\
+      
       Sí tiene sentido máscaras multicanal, ya que podríamos aplicar una máscara
       a cada canal de color, modificando cada uno de una manera distinta o combinando
-      varios canales.
+      varios canales. Aunque generalmente se suelen separar los canales, aplicar filtros,
+      y por último reconstruir la imagen.
   \end{solucion}
 
   \begin{cuestion}
@@ -513,16 +518,10 @@ Documentation can be found at http://docs.sympy.org/dev
   \end{cuestion}
 
   \begin{solucion}
-     	Lo clásico para reducir imágenes es lo que en programas de edición fotográfica
-      se conoce como \textit{Reducir colores}. Esta operación cambia el tipo de almacenamiento
-      de la imagen, pasando por ejemplo de CV\_32FC3 a CV\_8UC3, reduciendo así el
-      tamaño de cada píxel. Esto puede desembocar en una pérdida de gama de colores.\\
+     	Las operaciones básicas son alisamiento y submuestreo.\\
 
-      La opción general es la compresión de imágenes. Existen técnicas de compresión
-      con pérdida y sin pérdida. Entre las opciones de compresión sin pérdida
-      se encuentran \textit{RLE} y \textit{Deflación}, mientras que en las opciones con pérdida
-      se encuentran lo arriba comentado como \textit{reducción de colores}, \textit{codificación
-      por transformación} o \textit{compresión fractal}
+      Es importante primero alisar y luego submuestrear ya que si no la imagen
+      se verá pixelada al conservar frecuencias muy altas de la imagen original.
   \end{solucion}
   \begin{cuestion}
      	¿Qué información de la imagen original se conserva cuando vamos
@@ -531,7 +530,8 @@ Documentation can be found at http://docs.sympy.org/dev
   \end{cuestion}
 
   \begin{solucion}
-     	contenidos...
+     	Conservamos las bajas frecuencias, ya que al realizar los pasos de alisamiento
+      y submuestreo la imagen se va haciendo cada vez más uniforme.
   \end{solucion}
   \begin{cuestion}
      	¿Cuál es la diferencia entre una pirámide Gaussiana y una Piramide
