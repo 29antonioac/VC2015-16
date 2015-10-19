@@ -343,7 +343,7 @@
       No, ya que hemos visto que muchas máscaras son separables por filas y columnas.
       Así conseguimos una complejidad computacional menor, y por tanto deberíamos
       buscar siempre este tipo de máscaras. La Gaussiana, por ejemplo, es separable. \\
-      
+
       Sí tiene sentido máscaras multicanal, ya que podríamos aplicar una máscara
       a cada canal de color, modificando cada uno de una manera distinta o combinando
       varios canales. Aunque generalmente se suelen separar los canales, aplicar filtros,
@@ -357,10 +357,10 @@
 
   \begin{solucion}
       Ambas operaciones consisten en pasar la máscara por todos los píxeles de la imagen,
-      realizando una combinación lineal sobre los valores de luminosidad de la imagen. \\
+      realizando una combinación lineal sobre los valores de luminosidad de los píxeles vecinos. \\
 
       La diferencia entre ambas operaciones es que en la correlación (formalmente
-      es correlación cruzada) primero refleja la imagen sobre ambos ejes antes de
+      es correlación cruzada) primero refleja la máscara sobre ambos ejes antes de
       aplicar la convolución.
   \end{solucion}
 
@@ -370,6 +370,7 @@
   \end{cuestion}
 
   \begin{solucion}
+    MAL.\\
       Los filtros de convolución son una combinación lineal (producto escalar) entre
       los valores del filtro y los valores de luminosidad del ROI tomado. En este caso,
       la operación tiene un coste lineal.\\
@@ -390,7 +391,8 @@
       está relacionado con los de su alrededor.
       No tendría sentido tomar todos los píxeles de una imagen,
       ya que entonces todos los píxeles se alisarían de la misma manera, no obteniendo
-      un buen resultado.
+      un buen resultado. Además, así no cumplimos la misión del alisamiento, que
+      es reducir la diferencia lumínica entre píxeles vecinos.
   \end{solucion}
 
   \begin{cuestion}
@@ -497,7 +499,9 @@ Documentation can be found at http://docs.sympy.org/dev
         \frac{\partial G}{\partial y} = - \frac{e^{- \frac{x^{2}}{2 \sigma^{2}}}}{\sqrt{2 \pi} \sigma^{2}} y\frac{e^{- \frac{y^{2}}{2 \sigma^{2}}}}{\sqrt{2 \pi} \sigma^{2}}
        $}\end{equation*}
 
-       Los papeles de ambas en la convolución son (insertar)
+       Los papeles de ambas en la convolución son calcular una imagen que resalte
+       los cambios de intensidad en cada uno de los ejes: En el eje $X$ la parcial
+       con respecto a $x$ y respectivamente en el eye $Y$ la parcial sobre $y$.
   \end{solucion}
 
   \begin{cuestion}
@@ -520,8 +524,11 @@ Documentation can be found at http://docs.sympy.org/dev
   \begin{solucion}
      	Las operaciones básicas son alisamiento y submuestreo.\\
 
-      Es importante primero alisar y luego submuestrear ya que si no la imagen
-      se verá pixelada al conservar frecuencias muy altas de la imagen original.
+      Al realizar submuestreo aparece el \textit{aliasing}, ya que no tomamos una
+      señal lo suficientemente grande y se pierden las frecuencias más altas,
+      perdiendo mucho detalle. Por eso es importante primero alisar y luego submuestrear,
+      ya que así la imagen queda suavizada \"uniformizando\" las frecuencias, evitando
+      así que se pierdan las más altas.
   \end{solucion}
   \begin{cuestion}
      	¿Qué información de la imagen original se conserva cuando vamos
@@ -531,7 +538,9 @@ Documentation can be found at http://docs.sympy.org/dev
 
   \begin{solucion}
      	Conservamos las bajas frecuencias, ya que al realizar los pasos de alisamiento
-      y submuestreo la imagen se va haciendo cada vez más uniforme.
+      y submuestreo la imagen se va haciendo cada vez más uniforme, quedando
+      las zonas donde los cambios de iluminosidad son más suaves. Se pierden
+      las altas frecuencias, y con ello las zonas de gran detalle de la imagen.
   \end{solucion}
   \begin{cuestion}
      	¿Cuál es la diferencia entre una pirámide Gaussiana y una Piramide
