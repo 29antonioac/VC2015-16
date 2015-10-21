@@ -575,8 +575,20 @@ Documentation can be found at http://docs.sympy.org/dev
   \end{cuestion}
 
   \begin{solucion}
-     	contenidos...
+     	Mientras que los filtros de Sobel y Robert aplican dos máscaras de convolución
+      y detectan bordes horizontales y verticales, el filtro de Canny filtra usando
+      la derivada de la Gaussiana. Además, añade la \textit{supresión de los no-máximos}
+      (compara la intensidad de un píxel con sus vecinos en la dirección del gradiente,
+      conservando dichos píxeles si su intensidad es máxima en comparación con los demás)
+      y la \textit{histéresis y enlazado} (se definen umbrales alto y bajo, los píxeles
+      que superan el umbral alto forman un borde, y los más bajos que el umbral bajo
+      se desechan ). \\
+
+      Esto consigue una imagen con bordes de anchura un píxel, consiguiendo mucha precisión
+      en la situación del borde. Además, el filtro de Canny devuelve una imagen
+      binaria y no en escala de grises.
   \end{solucion}
+
   \begin{cuestion}
      	Buscar e identificar una aplicación real en la que el filtro de
       Canny garantice unas fronteras que sean interpretables y por tanto sirvan
