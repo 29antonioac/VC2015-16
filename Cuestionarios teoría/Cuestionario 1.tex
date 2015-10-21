@@ -370,7 +370,6 @@
   \end{cuestion}
 
   \begin{solucion}
-    \begin{solucion}
     Los filtros de convolución definen funciones lineales, lo demostramos tomando la definición de convolución y sean $\alpha\in\mathbb{R}$ una constante y $F_1,F_2$ dos imágenes. Entonces:
     \begin{align*}
         H\star(\alpha(F_1+F_2)) &= \sum_{u=-k}^k\sum_{v=-k}^k H(u,v)\alpha\biggl(F_1(i-u,j-v)+F_2(i-u,j-v)\biggr) = \\
@@ -439,7 +438,12 @@
       Primero debemos alisar la imagen y luego calcular sus derivadas, puesto que la imagen
       original es muy probable que tenga mucho ruido. Esto hace que las derivadas no
       sean estables, pudiendo obtener datos muy falseados u erróneos. Alisando primero la
-      imagen, obtenemos unos datos más uniformes y útiles.
+      imagen, obtenemos unos datos más uniformes y útiles.\\
+
+      El \textit{teorema de la derivación de la convolución} nos dice que si primero
+      derivamos el filtro y luego convolucionamos, es lo mismo. Así que otra
+      estrategia podría ser derivar primero el filtro, lo cual es menos costoso
+      que hacerlo en toda la imagen.
   \end{solucion}
 
   \begin{cuestion}
