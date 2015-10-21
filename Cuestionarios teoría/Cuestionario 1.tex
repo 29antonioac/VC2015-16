@@ -592,13 +592,28 @@ Documentation can be found at http://docs.sympy.org/dev
   \begin{cuestion}
      	Buscar e identificar una aplicación real en la que el filtro de
       Canny garantice unas fronteras que sean interpretables y por tanto sirvan
-       para solucionar un problema de visión por computador.
-        Justificar con todo detalle la bondad de la elección.
+      para solucionar un problema de visión por computador.
+      Justificar con todo detalle la bondad de la elección.
 
   \end{cuestion}
 
   \begin{solucion}
-     	contenidos...
+     	En el ámbito de la seguridad informática existe la \textit{esteganografía},
+      una rama que se encarga de la ocultación de información en imágenes. Como
+      comentamos en la primera cuestión, la visión por computador trata tanto el
+      cifrado como descifrado de información en este ámbito, así que comentamos un
+      caso: investigadores de la
+      \fnurl{Universidad Nacional de la Matanza, Buenos Aires}{http://sedici.unlp.edu.ar/bitstream/handle/10915/43224/Documento_completo.pdf?sequence=1}
+      han utilizado el filtro de Canny para \textit{categorizar} imágenes según
+      su nivel de ruido, ya que a más ruido, más difícil es de sacar información
+      oculta de la imagen, ya que es más difícil seguir los cambios de luminosidad
+      de los píxeles. \\
+
+      La elección sobre este filtro se realizó mayormente por ensayo y error,
+      ya que hicieron pruebas con los filtros de \textit{Sobel}, \textit{Prewitt},
+      \textit{Roberts}, \textit{Laplaciano}, \textit{Cruce por cero} y \textit{Canny}.
+      Pero es de esperar que el filtro de Canny obtenga mejores resultados, sobre
+      todo por su capacidad de \"unir\" bordes y su gran precisión.
   \end{solucion}
   \begin{bonus}
      	Usando la descomposición SVD (Singular Value
@@ -612,5 +627,7 @@ Documentation can be found at http://docs.sympy.org/dev
   \begin{solucion}
      	contenidos...
   \end{solucion}
+
+  Para escribir este documento he recibido la ayuda de Alejandro García Montoro.
 
 \end{document}
