@@ -545,7 +545,12 @@ Documentation can be found at http://docs.sympy.org/dev
   \end{cuestion}
 
   \begin{solucion}
-     	contenidos...
+    Ayudándonos de iPython Notebook (pero no colocando ahora la salida), conseguimos
+    la laplaciana de la gaussiana:
+    \[ \bigtriangledown^2h_\sigma(u,v) = \frac{1}{2\pi \sigma^2} e^{-\frac{u^2+v^2}{2\sigma^2}} \bigg( \frac{u^2+v^2-2\sigma^2}{\sigma^4} \bigg) =\]
+    \[ = \bigg( \frac{1}{\sqrt{2\pi}\sigma^2} e^{-\frac{v}{2\sigma^2}} \bigg) e^{-\frac{u}{2\sigma^2}} \bigg( \frac{u^2-\sigma^2}{\sqrt{2\pi}\sigma^4} \bigg) + \]
+    \[ + \bigg( \frac{1}{\sqrt{2\pi}\sigma^2} e^{-\frac{u}{2\sigma^2}} \bigg) e^{-\frac{v}{2\sigma^2}} \bigg( \frac{v^2-\sigma^2}{\sqrt{2\pi}\sigma^4} \bigg)\]
+    Se observa que es suma de funciones separables de $u$ y $v$.
   \end{solucion}
 
 
