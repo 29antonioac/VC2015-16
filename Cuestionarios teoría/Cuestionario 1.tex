@@ -550,8 +550,24 @@ Documentation can be found at http://docs.sympy.org/dev
   \end{cuestion}
 
   \begin{solucion}
-     	contenidos...
+     	Si tomamos $G_i$ y $G_{i+1}$ dos niveles sucesivos de una pirámide gaussiana,
+      y contruimos $G'_{i+1}$ como $G_{i+1}$ pero con el tamaño de $G_i$, entonces
+      la pirámide laplaciana la podemos contruir como
+
+      $$L_i = G_i - G'_{i+1}$$
+
+      Es claro que si la gaussiana tiene $N$ niveles, $L_N = G_N$, ya que no existe
+      $G_{N+1}$. Entonces la diferencia es clara: la laplaciana conserva las
+      frecuencias medias y altas, mientras que en la gaussiana las bajas. \\
+
+      La pirámide laplaciana es muy usada en codificación eficiente de imágenes,
+      ya que la compresión es mayor en imágenes con frecuencias más altas, que es
+      justo lo que caracteriza a la laplaciana. Esto se consigue debido a que las
+      imágenes de la pirámide laplaciana tienen entropía y varianza pequeñas,
+      haciendo la codificación más agresiva, pero sin distorsionar lo suficiente
+      como para que los humanos lo notemos.
   \end{solucion}
+
   \begin{cuestion}
      	Cual es la aportación del filtro de Canny al cálculo de fronteras
       frente a filtros como Sobel o Robert. Justificar detalladamente la
