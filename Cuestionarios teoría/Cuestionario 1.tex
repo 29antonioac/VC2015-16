@@ -370,14 +370,43 @@
   \end{cuestion}
 
   \begin{solucion}
-    MAL.\\
-      Los filtros de convolución son una combinación lineal (producto escalar) entre
-      los valores del filtro y los valores de luminosidad del ROI tomado. En este caso,
-      la operación tiene un coste lineal.\\
+    \begin{solucion}
+    Los filtros de convolución definen funciones lineales, lo demostramos tomando la definición de convolución y sean $\alpha\in\mathbb{R}$ una constante y $F_1,F_2$ dos imágenes. Entonces:
+    \begin{align*}
+        H\star(\alpha(F_1+F_2)) &= \sum_{u=-k}^k\sum_{v=-k}^k H(u,v)\alpha\biggl(F_1(i-u,j-v)+F_2(i-u,j-v)\biggr) = \\
+        &= \alpha\biggl(\sum_{u=-k}^k\sum_{v=-k}^k H(u,v)(F_1(i-u,j-v)+F_2(i-u,j-v))\biggr) = \\
+        &= \alpha\biggl(\sum_{u=-k}^k\sum_{v=-k}^k H(u,v)F_1(i-u,j-v) + \\
+        &+ \sum_{u=-k}^k\sum_{v=-k}^k H(u,v)F_2(i-u,j-v)\biggr) = \\
+        &= \alpha(H\star F_1 + H\star F_2)
+    \end{align*}
 
-      En el caso del filtro de mediana, no es así, ya que para calcular la mediana
-      debemos ordenar los valores de los píxeles, que es una operación que en el mejor
-      caso es $O(n logn)$, lo cual no es lineal.
+    Los filtros de mediana no son lineales, ya que la mediana de un conjunto de números no lo es. Tomamos $F_1$ y $F_2$ las dos imágenes siguientes:
+    \[
+    F_1 = \left(
+    \begin{array}{ccc}
+        0 & 0 & 0 \\
+        0 & 3 & 6 \\
+        8 & 7 & 10 \\
+    \end{array}
+    \right);
+    F_2 = \left(
+    \begin{array}{ccc}
+        0 & 0 & 0 \\
+        5 & 6 & 0 \\
+        10 & 7 & 6 \\
+    \end{array}
+    \right);
+    F_1+F_2 = \left(
+    \begin{array}{ccc}
+        0 & 0 & 0 \\
+        5 & 9 & 6 \\
+        18 & 14 & 16 \\
+    \end{array}
+    \right)
+    \]
+
+    Es claro que no es una operación lineal, ya que en $F_1$ vale 3, en $F_2$ vale 5 y en $F_1+F_2$ vale $6\neq3+5$.
+\end{solucion}
   \end{solucion}
 
   \begin{cuestion}
@@ -613,7 +642,7 @@ Documentation can be found at http://docs.sympy.org/dev
       ya que hicieron pruebas con los filtros de \textit{Sobel}, \textit{Prewitt},
       \textit{Roberts}, \textit{Laplaciano}, \textit{Cruce por cero} y \textit{Canny}.
       Pero es de esperar que el filtro de Canny obtenga mejores resultados, sobre
-      todo por su capacidad de \"unir\" bordes y su gran precisión.
+      todo por su capacidad de \textit{unir bordes} y su gran precisión.
   \end{solucion}
   \begin{bonus}
      	Usando la descomposición SVD (Singular Value
