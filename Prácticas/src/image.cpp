@@ -2,9 +2,9 @@
 
 #include <opencv2/imgproc.hpp>
 
-// #include <iostream>
-// using std::cout;
-// using std::endl;
+#include <iostream>
+using std::cout;
+using std::endl;
 
 int Image::num_images = 0;
 
@@ -154,5 +154,25 @@ void Image::setPixels(const vector<Point> & pixel_list, const vector<uchar> & va
   for (int i = 0; i < pixel_list.size(); i++)
   {
     image.at<uchar>(pixel_list.at(i)) = value_list.at(i % value_list.size());
+  }
+}
+
+void Image::convolution(const float sigma)
+{
+  Mat mask = gaussianMask(sigma);
+
+  // Rows convolution
+  for (int i = 0; i < image.rows; i++)
+  {
+    Mat row = image.row(i).clone();
+    convolution1D(row,mask,true).copyTo(image.row(i));
+  }
+
+
+  // Cols convolution
+  for (int j = 0; j < image.cols; j++)
+  {
+    Mat col = image.col(j).clone();
+    convolution1D(col,mask,false).copyTo(image.col(j));
   }
 }

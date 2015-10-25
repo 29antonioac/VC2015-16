@@ -14,20 +14,20 @@ string SplitFilename (const string& str)
 
 Mat gaussianMask(float sigma)
 {
-  unsigned int mask_size = 2 * round(3 * sigma) + 1; // +-3*sigma plus the zero
-  unsigned int mask_center = round(3 * sigma);
+  int mask_size = 2 * round(3 * sigma) + 1; // +-3*sigma plus the zero
+  int mask_center = round(3 * sigma);
 
   float value = 0, sum_values = 0;
-  unsigned int mask_index;
+  int mask_index;
 
-  Mat mask = Mat(1, mask_size, CV_32FC1);
+  Mat mask = Mat::zeros(1, mask_size, CV_32FC1);
 
-  for (unsigned int i = 0; i < mask_size; i++)
+  for (int i = 0; i < mask_size; i++)
   {
     mask_index = i - mask_center;
     value = exp(-0.5 * (mask_index * mask_index) / (sigma * sigma));
 
-    mask.at<float>(mask_index,0) = value;
+    mask.at<float>(Point(i,0)) = value;
     sum_values += value;
   }
 
@@ -36,28 +36,64 @@ Mat gaussianMask(float sigma)
   return mask;
 }
 
-Mat convolution1D(Mat &input, Mat &mask, bool reflected)
+Mat convolution1D1C(Mat &input, Mat &mask, bool reflected)
 {
   // Expand the matrix
-  Mat expanded;
+  Mat expanded, copy_input;
   int borderType = BORDER_CONSTANT;
   int offset = (mask.cols - 1) / 2;
+  bool is_column = false;
 
   if (reflected)
     borderType = BORDER_REFLECT;
 
-  copyMakeBorder(input,expanded,0,0,offset,offset,borderType,0);
+  if (input.rows > 1 && input.cols == 1)
+    is_column = true;
+
+  if (is_column)
+    transpose(input,copy_input);
+  else
+    copy_input = input.clone();
+
+  copyMakeBorder(copy_input,expanded,0,0,offset,offset,borderType,0);
 
   // Convolution!
   Mat ROI;
-  Mat output = Mat::zeros(1, input.cols, CV_32FC1);
+  Mat output = Mat::zeros(1, copy_input.cols, CV_32FC1);
+  expanded.convertTo(expanded,CV_32FC1);
 
-  for (int i = 0; i < input.cols; i++) // Index are OK
+  for (int i = 0; i < copy_input.cols; i++) // Index are OK
   {
     ROI = Mat(expanded, Rect(i,0,mask.cols,1));
     output.at<float>(Point(i,0)) = ROI.dot(mask);
   }
 
-  return output;
+  Mat copy_output;
+  if (is_column)
+    transpose(output,copy_output);
+  else
+    output.copyTo(copy_output);
 
+  return copy_output;
+}
+
+Mat convolution1D(Mat &input, Mat &mask, bool reflected)
+{
+  Mat output;
+  if (input.channels() == 1)
+    output = convolution1D1C(input,mask,reflected);
+  else
+  {
+    cout << "3 canales" << endl;
+    Mat input_channels[3], output_channels[3];
+    split(input, input_channels);
+
+    for (int i = 0; i < input.channels(); i++)
+    {
+      output_channels[i] = convolution1D1C(input_channels[i],mask,reflected);
+    }
+    merge(output_channels, input.channels(), output);
+  }
+
+  return output;
 }

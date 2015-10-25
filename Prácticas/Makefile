@@ -16,7 +16,7 @@ OBJ					:= ./obj
 SRC					:= ./src
 
 
-target_name         := $(BIN)/practica1
+target_name         := $(BIN)/practica0
 opt_dbg_flag        := -g
 exit_first          := -Wfatal-errors
 warn_all            := -Wall

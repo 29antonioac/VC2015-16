@@ -30,6 +30,8 @@ public:
   void setPixels(const vector<Point> & pixel_list, const vector<Vec3b> & value_list);
   void setPixels(const vector<Point> & pixel_list, const vector<uchar> & value_list);
 
+  void convolution(const float sigma);
+
 
 
 };
