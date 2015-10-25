@@ -4,12 +4,14 @@
 #include <string>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
-using cv::Mat;
+using namespace cv;
 using std::string;
 
 string SplitFilename (const string& str);
 Mat gaussianMask(float sigma);
+Mat convolution1D(Mat &input, Mat &mask, bool reflected);
 
 
 #endif

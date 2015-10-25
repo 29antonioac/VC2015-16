@@ -2,6 +2,9 @@
 
 #include <cstddef>        // std::size_t
 #include <cmath>
+#include <iostream>
+
+using namespace std;
 
 string SplitFilename (const string& str)
 {
@@ -31,4 +34,30 @@ Mat gaussianMask(float sigma)
   mask *= 1.0 / sum_values;
 
   return mask;
+}
+
+Mat convolution1D(Mat &input, Mat &mask, bool reflected)
+{
+  // Expand the matrix
+  Mat expanded;
+  int borderType = BORDER_CONSTANT;
+  int offset = (mask.cols - 1) / 2;
+
+  if (reflected)
+    borderType = BORDER_REFLECT;
+
+  copyMakeBorder(input,expanded,0,0,offset,offset,borderType,0);
+
+  // Convolution!
+  Mat ROI;
+  Mat output = Mat::zeros(1, input.cols, CV_32FC1);
+
+  for (int i = 0; i < input.cols; i++) // Index are OK
+  {
+    ROI = Mat(expanded, Rect(i,0,mask.cols,1));
+    output.at<float>(Point(i,0)) = ROI.dot(mask);
+  }
+
+  return output;
+
 }

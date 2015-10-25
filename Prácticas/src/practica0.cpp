@@ -1,10 +1,14 @@
 #include "../inc/image.hpp"
+#include "../inc/utils.hpp"
 #include <iostream>
+
+using namespace std;
+using namespace cv;
 
 
 int main(int argc, char const *argv[]) {
   Image prueba(string("Imágenes/lena.jpg"),false);
-  Image prueba2(string("Imágenes/bird.bmp"),true);
+  Image prueba2(string("Imágenes/einstein.bmp"),true);
   prueba.paint();
   prueba2.paint();
 
@@ -40,6 +44,14 @@ int main(int argc, char const *argv[]) {
 
   waitKey(0);
   destroyAllWindows();
+
+  float data[5] = {1,2,3,2,1};
+  float data2[3] = {1,2,1};
+  Mat A (1, 5, CV_32FC1, &data);
+  Mat B (1, 3, CV_32FC1, &data2);
+  cout << A << endl;
+
+  cout << convolution1D(A,B,false);
 
   return 0;
 }
