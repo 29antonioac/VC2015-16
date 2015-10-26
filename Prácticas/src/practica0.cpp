@@ -46,9 +46,22 @@ int main(int argc, char const *argv[]) {
   // destroyAllWindows();
 
   cout << "Convolucion" << endl;
-  prueba.convolution(3);
-  prueba.paint();
+  Image prueba2 = prueba.GaussConvolution(3);
+  prueba2.paint();
   cout << "convolucion end" << endl;
+
+
+
+  waitKey(0);
+  destroyAllWindows();
+
+  Image einstein(string("Imágenes/einstein.bmp"),true);
+
+  Image einstein_conv = einstein.GaussConvolution(3);
+  einstein_conv.paint();
+
+  // Image prueba3 = prueba.createHybrid(einstein,true,3,5);
+  // prueba3.paint();
 
   waitKey(0);
   destroyAllWindows();

@@ -8,6 +8,8 @@ using std::endl;
 
 int Image::num_images = 0;
 
+/* Private methods */
+
 Mat Image::gaussianMask(float sigma)
 {
   int mask_size = 2 * round(3 * sigma) + 1; // +-3*sigma plus the zero
@@ -66,7 +68,6 @@ Mat Image::convolution1D(Mat &input, Mat &mask, bool reflected)
     output = convolution1D1C(input,mask,reflected);
   else
   {
-    cout << "3 canales" << endl;
     Mat input_channels[3], output_channels[3];
     split(input, input_channels);
 
@@ -80,7 +81,42 @@ Mat Image::convolution1D(Mat &input, Mat &mask, bool reflected)
   return output;
 }
 
+Mat Image::convolution2D(Mat &input, Mat &mask, bool reflected)
+{
 
+  mask = flip(mask);
+  Mat output = Mat(input);
+
+  // Convolution
+  for (int i = 0; i < image.rows; i++)
+  {
+    Mat row = output.row(i).clone();
+    convolution1D(row,mask,reflected).copyTo(output.row(i));
+  }
+  // Transposing for convolution by cols
+  output = output.t();
+
+  for (int i = 0; i < input.rows; i++)
+  {
+    Mat row = output.row(i).clone();
+    convolution1D(row,mask,reflected).copyTo(output.row(i));
+  }
+  // Re-transposing to make the correct image
+  output = output.t();
+
+  return output;
+}
+
+Mat Image::flip(Mat &input) {
+	Mat flipped = Mat::zeros(input.rows, input.cols, input.type());
+
+	for (int i = 0; i < input.rows; i++)
+		for (int j = 0; j < input.cols; j++)
+			flipped.at<float>(Point(j,i)) = input.at<float>(Point(input.cols - 1 - j, input.rows - i - 1));
+
+	return flipped;
+}
+/* ---------------------------------------------------- */
 
 Image::Image(string path, bool flag)
 {
@@ -97,6 +133,14 @@ Image::Image(int rows, int cols)
   ID = num_images;
   image = Mat::zeros(rows,cols,CV_8UC3);
   name = "zeros";
+}
+
+Image::Image(const Mat& input)
+{
+  num_images++;
+  ID = num_images;
+  image = input.clone();
+  name = "Mat";
 }
 
 Image::Image(const Image& img)
@@ -230,25 +274,30 @@ void Image::setPixels(const vector<Point> & pixel_list, const vector<uchar> & va
   }
 }
 
-void Image::convolution(const float sigma)
+Image Image::GaussConvolution(const float sigma, bool reflected)
 {
   Mat mask = gaussianMask(sigma);
+  Mat convolution = convolution2D(this->image, mask, reflected);
 
-  // Convolution
-  for (int i = 0; i < image.rows; i++)
-  {
-    Mat row = image.row(i).clone();
-    convolution1D(row,mask,true).copyTo(image.row(i));
-  }
-  // Transposing for convolution by cols
-  image = image.t();
+  return Image(convolution);
+}
 
-  for (int i = 0; i < image.rows; i++)
-  {
-    Mat row = image.row(i).clone();
-    convolution1D(row,mask,true).copyTo(image.row(i));
-  }
-  // Re-transposing to make the correct image
-  image = image.t();
+Image Image::createHybrid(const Image &another, bool reflected, float sigma_1, float sigma_2)
+{
+  Mat low, high;
+  Mat output;
 
+  Mat mask_1 = gaussianMask(sigma_1);
+  Mat mask_2 = gaussianMask(sigma_2);
+
+  Mat copy_image = another.image.clone();
+
+  low = convolution2D(this->image, mask_1, reflected);
+  high = convolution2D(copy_image, mask_2, reflected);
+
+  high = another.image - high;
+
+	output = low + high;
+
+  return Image(output);
 }
