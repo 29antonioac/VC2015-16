@@ -10,9 +10,7 @@ using namespace cv;
 using std::string;
 
 string SplitFilename (const string& str);
-Mat gaussianMask(float sigma);
-Mat convolution1D1C(Mat &input, Mat &mask, bool reflected);
-Mat convolution1D(Mat &input, Mat &mask, bool reflected);
+
 
 
 #endif

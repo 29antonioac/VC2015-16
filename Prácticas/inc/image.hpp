@@ -18,6 +18,10 @@ private:
   string name;
   static int num_images;
   int ID;
+
+  Mat gaussianMask(float sigma);
+  Mat convolution1D1C(Mat &input, Mat &mask, bool reflected);
+  Mat convolution1D(Mat &input, Mat &mask, bool reflected);
 public:
   Image(string path, bool flag);
   Image(int rows, int cols);
