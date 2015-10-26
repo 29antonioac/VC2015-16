@@ -38,39 +38,25 @@ Mat Image::convolution1D1C(Mat &input, Mat &mask, bool reflected)
   Mat expanded, copy_input;
   int borderType = BORDER_CONSTANT;
   int offset = (mask.cols - 1) / 2;
-  bool is_column = false;
 
   if (reflected)
     borderType = BORDER_REFLECT;
 
-  if (input.rows > 1 && input.cols == 1)
-    is_column = true;
 
-  if (is_column)
-    transpose(input,copy_input);
-  else
-    copy_input = input.clone();
-
-  copyMakeBorder(copy_input,expanded,0,0,offset,offset,borderType,0);
+  copyMakeBorder(input,expanded,0,0,offset,offset,borderType,0);
 
   // Convolution!
   Mat ROI;
-  Mat output = Mat::zeros(1, copy_input.cols, CV_32FC1);
+  Mat output = Mat::zeros(1, input.cols, CV_32FC1);
   expanded.convertTo(expanded,CV_32FC1);
 
-  for (int i = 0; i < copy_input.cols; i++) // Index are OK
+  for (int i = 0; i < input.cols; i++) // Index are OK
   {
     ROI = Mat(expanded, Rect(i,0,mask.cols,1));
     output.at<float>(Point(i,0)) = ROI.dot(mask);
   }
 
-  Mat copy_output;
-  if (is_column)
-    transpose(output,copy_output);
-  else
-    output.copyTo(copy_output);
-
-  return copy_output;
+  return output;
 }
 
 Mat Image::convolution1D(Mat &input, Mat &mask, bool reflected)
@@ -248,18 +234,21 @@ void Image::convolution(const float sigma)
 {
   Mat mask = gaussianMask(sigma);
 
-  // Rows convolution
+  // Convolution
   for (int i = 0; i < image.rows; i++)
   {
     Mat row = image.row(i).clone();
     convolution1D(row,mask,true).copyTo(image.row(i));
   }
+  // Transposing for convolution by cols
+  image = image.t();
 
-
-  // Cols convolution
-  for (int j = 0; j < image.cols; j++)
+  for (int i = 0; i < image.rows; i++)
   {
-    Mat col = image.col(j).clone();
-    convolution1D(col,mask,false).copyTo(image.col(j));
+    Mat row = image.row(i).clone();
+    convolution1D(row,mask,true).copyTo(image.row(i));
   }
+  // Re-transposing to make the correct image
+  image = image.t();
+
 }
