@@ -294,7 +294,8 @@ Image Image::createHybrid(const Image &another, bool reflected, float sigma_1, f
   low = convolution2D(this->image, mask_1, reflected);
   high = convolution2D(copy_image, mask_2, reflected);
 
-  high = another.image - high;
+  high = copy_image - high;
+  // high = high - copy_image;
 
 	output = low + high;
 
