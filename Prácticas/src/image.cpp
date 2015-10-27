@@ -49,7 +49,7 @@ vector <Mat> Image::MaskFirstDerivative(float sigma, char axis)
   for (int i = 0; i < mask_size; i++)
   {
     mask_index = i - mask_center;
-    value = -mask_index * exp(-0.5 * (mask_index * mask_index) / (2*sigma * sigma)) / sqrt(0.5);
+    value = -mask_index * exp(-0.5 * (mask_index * mask_index) / (2*sigma * sigma)) * sqrt(0.5);
 
     mask_x.at<float>(Point(i,0)) = value;
     sum_values += value;
@@ -67,7 +67,7 @@ vector <Mat> Image::MaskFirstDerivative(float sigma, char axis)
   for (int i = 0; i < mask_size; i++)
   {
     mask_index = i - mask_center;
-    value = - exp(-0.5 * (mask_index * mask_index) / (2*sigma * sigma)) / sqrt(0.5);
+    value = - exp(-0.5 * (mask_index * mask_index) / (2*sigma * sigma)) * sqrt(0.5);
 
     mask_1.at<float>(Point(i,0)) = value;
     sum_values += value;
@@ -383,18 +383,20 @@ Image Image::calcFirstDerivative(float sigma, char axis, bool reflected)
 
   flip(mask,mask,-1);
   Mat output = image.clone();
-  cout << "Convolucion por filas" << endl;
+
+
   // Convolution
   for (int i = 0; i < output.rows; i++)
   {
     Mat row = output.row(i).clone();
     convolution1D(row,mask,reflected).copyTo(output.row(i));
   }
+
   // Transposing for convolution by cols
   output = output.t();
 
-  cout << "Convolucion por columnas" << endl;
   mask = derivatives[1].clone();
+  flip(mask,mask,-1);
 
   for (int i = 0; i < output.rows; i++)
   {
