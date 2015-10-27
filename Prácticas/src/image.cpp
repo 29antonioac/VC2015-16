@@ -408,3 +408,22 @@ Image Image::calcFirstDerivative(float sigma, char axis, bool reflected)
 
   return Image(output);
 }
+
+Image Image::detectEdges(double lowThreshold, double highThreshonld)
+{
+  // First of all we blur the image
+  Image tmp = GaussConvolution(3,true);
+
+  Mat edges;
+
+  // Apply Canny filter!
+  Canny(tmp.image, edges, lowThreshold, highThreshonld);
+
+  // Black background
+  Mat dest = Mat::zeros(tmp.image.rows, tmp.image.cols, tmp.image.type());
+
+  // Copy the input image to dest using the edges as mask
+  tmp.image.copyTo(dest, edges);
+
+  return Image(dest);
+}

@@ -9,7 +9,7 @@ using namespace cv;
 int main(int argc, char const *argv[]) {
 
 
-  Image lena(string("Imágenes/lena.jpg"),false);
+  Image lena(string("imagenes/lena.jpg"),false);
   Image lena_conv = lena.GaussConvolution(3);
   lena.paint();
   lena_conv.paint();
@@ -17,8 +17,8 @@ int main(int argc, char const *argv[]) {
   waitKey(0);
   destroyAllWindows();
 
-  Image einstein(string("Imágenes/einstein.bmp"),true);
-  Image marilyn(string("Imágenes/marilyn.bmp"),true);
+  Image einstein(string("imagenes/einstein.bmp"),true);
+  Image marilyn(string("imagenes/marilyn.bmp"),true);
 
   Image hybrid = einstein.createHybrid(marilyn,true,6,6);
 
@@ -48,8 +48,6 @@ int main(int argc, char const *argv[]) {
 
   pyramidImage.paint();
 
-
-
   waitKey(0);
   destroyAllWindows();
 
@@ -59,6 +57,15 @@ int main(int argc, char const *argv[]) {
   derivative_y.paint();
 
   waitKey(0),
+  destroyAllWindows();
+
+  Image bicycle(string("imagenes/bicycle.bmp"),true);
+  Image edges_bicycle = bicycle.detectEdges(40,60);
+
+  bicycle.paint();
+  edges_bicycle.paint();
+
+  waitKey(0);
   destroyAllWindows();
 
   return 0;

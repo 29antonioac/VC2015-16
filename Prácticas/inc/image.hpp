@@ -46,6 +46,7 @@ public:
   /* Bonus */
 
   Image calcFirstDerivative(float sigma, char axis, bool reflected = false);
+  Image detectEdges(double threshold1, double threshold2);
 
 
 
