@@ -301,3 +301,32 @@ Image Image::createHybrid(const Image &another, bool reflected, float sigma_1, f
 
   return Image(output);
 }
+
+Image Image::downsample()
+{
+  // Classic technique: Blur and downsample (deleting odd cols and rows)
+  Mat output = Mat::zeros(image.rows / 2, image.cols / 2, image.type());
+
+  int i1, i2;
+  int j1, j2;
+
+  Mat mask = gaussianMask(1);
+  Mat image_blur = convolution2D(image,mask,false);
+
+  if (image.channels() == 1)
+  {
+    for (i1 = 0, i2 = 0; i1 < image_blur.rows && i2 < output.rows; i1+=2, i2++)
+      for (j1 = 0,j2 = 0; j1 < image_blur.cols && j2 < output.cols; j1+=2,j2++)
+        output.at<float>(Point(j2,i2)) = image_blur.at<float>(Point(j1,i1));
+  }
+  else
+  {
+    for (i1 = 0, i2 = 0; i1 < image_blur.rows && i2 < output.rows; i1+=2, i2++)
+      for (j1 = 0,j2 = 0; j1 < image_blur.cols && j2 < output.cols; j1+=2,j2++)
+        output.at<Vec3b>(Point(j2,i2)) = image_blur.at<Vec3b>(Point(j1,i1));
+  }
+
+  return Image(output);
+
+
+}

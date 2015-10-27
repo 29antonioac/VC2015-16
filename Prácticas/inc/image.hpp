@@ -40,6 +40,8 @@ public:
   Image GaussConvolution(const float sigma, bool reflected = false);
   Image createHybrid(const Image &another, bool reflected, float sigma_1, float sigma_2);
 
+  Image downsample();
+
 
 
 };

@@ -72,5 +72,23 @@ int main(int argc, char const *argv[]) {
   waitKey(0);
   destroyAllWindows();
 
+  vector<Image*> pyramid;
+  Image hybrid_d1 = hybrid.downsample();
+  Image hybrid_d2 = hybrid_d1.downsample();
+  Image hybrid_d3 = hybrid_d2.downsample();
+  Image hybrid_d4 = hybrid_d3.downsample();
+  pyramid.push_back(&hybrid);
+  pyramid.push_back(&hybrid_d1);
+  pyramid.push_back(&hybrid_d2);
+  pyramid.push_back(&hybrid_d3);
+  pyramid.push_back(&hybrid_d4);
+
+  Image pyramidImage(pyramid, 1,5);
+
+  pyramidImage.paint();
+
+  waitKey(0);
+  destroyAllWindows();
+
   return 0;
 }
