@@ -23,7 +23,6 @@ private:
   Mat convolution1D1C(Mat &input, Mat &mask, bool reflected);
   Mat convolution1D(Mat &input, Mat &mask, bool reflected);
   Mat convolution2D(Mat &input, Mat &mask, bool reflected);
-  Mat flip(Mat &input);
 public:
   Image(string path, bool flag);
   Image(int rows, int cols);

@@ -83,7 +83,7 @@ Mat Image::convolution1D(Mat &input, Mat &mask, bool reflected)
 
 Mat Image::convolution2D(Mat &input, Mat &mask, bool reflected)
 {
-  mask = flip(mask);
+  flip(mask,mask,-1);
   Mat output = input.clone();
 
   // Convolution
@@ -104,16 +104,6 @@ Mat Image::convolution2D(Mat &input, Mat &mask, bool reflected)
   output = output.t();
 
   return output;
-}
-
-Mat Image::flip(Mat &input) {
-	Mat flipped = Mat::zeros(input.rows, input.cols, input.type());
-
-	for (int i = 0; i < input.rows; i++)
-		for (int j = 0; j < input.cols; j++)
-			flipped.at<float>(Point(j,i)) = input.at<float>(Point(input.cols - 1 - j, input.rows - i - 1));
-
-	return flipped;
 }
 /* ---------------------------------------------------- */
 
