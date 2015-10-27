@@ -103,7 +103,7 @@ rulecolor=,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \hypersetup{
-  pdftitle={Cuestionario de teoría 1},
+  pdftitle={Informe de trabajo 1},
   pdfauthor={Antonio Álvarez Caballero},
   unicode,
   breaklinks=true,  % so long urls are correctly broken across lines
@@ -113,6 +113,10 @@ rulecolor=,
   citecolor=darkgreen,
   }
 
+\title{Informe de trabajo 1}
+\author{Antonio Álvarez Caballero\\
+    \href{mailto:analca3@correo.ugr.es}{analca3@correo.ugr.es}}
+\date{}
 %%%%%%%%%%%%%%%%% FIN PREAMBULO %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
@@ -121,8 +125,34 @@ rulecolor=,
 
   \section{Convolución}
 
-  \begin{cuestion}
-    Hola
-  \end{cuestion}
+  La primera parte de la práctica consiste en aplicar un filtro de convolución
+  (en este caso, un filtro de alisamiento Gaussiano) a una imagen. Para ello,
+  partiendo de la función Gaussiana en una sola variable (recordamos que este filtro
+  es separable en filas y columnas), realizaremos una serie de pasos.
+
+  \subsection{Creación del vector máscara}
+
+  El primero de ellos será, a partir de la función proporcionada $f(x)=exp(-0.5\frac{x^2}{\sigma^2})$
+  y de un valor $\sigma$ , generar un vector máscara representativo. Para conseguirlo,
+  debemos recordar que para que la máscara sea significativa debe contener la región
+  $[-3\sigma,3\sigma]$. Sabiendo esto, la longitud de la máscara podremos conseguirla
+  aplicando en $C++$ esta operación:
+  es
+
+  \begin{lstlisting}
+    float dimension = 2*round(3*sigma) + 1;
+  \end{lstlisting}
+
+  ¿Por qué? Pues porque así conseguimos discretizar $3*\sigma$ y que la máscara
+  tenga en ambos lados dicha longitud. Luego sumamos $1$ para contar también el centro.
+
+  Una vez tenemos la dimensión de la máscara, debemos aplicar $f(x)$ a los índices
+  de nuestra máscara. Es decir, para $\sigma = 1$, la dimensión sería $7$, y los
+  índices de la máscara $[-3,-2,-1,0,1,2,3]$, pues debemos aplicar $f(x)$ a dichos
+  valores para obtener nuestro vector máscara.
+
+
+
+
 
 \end{document}
