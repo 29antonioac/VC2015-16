@@ -23,6 +23,8 @@ private:
   Mat convolution1D1C(Mat &input, Mat &mask, bool reflected);
   Mat convolution1D(Mat &input, Mat &mask, bool reflected);
   Mat convolution2D(Mat &input, Mat &mask, bool reflected);
+
+  vector<Mat> MaskFirstDerivative(float sigma, char axis);
 public:
   Image(string path, bool flag);
   Image(int rows, int cols);
@@ -38,8 +40,12 @@ public:
 
   Image GaussConvolution(const float sigma, bool reflected = false);
   Image createHybrid(const Image &another, bool reflected, float sigma_1, float sigma_2);
-
+  Image convolution(const Mat &mask);
   Image downsample();
+
+  /* Bonus */
+
+  Image calcFirstDerivative(float sigma, char axis, bool reflected = false);
 
 
 

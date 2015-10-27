@@ -87,7 +87,15 @@ int main(int argc, char const *argv[]) {
 
   pyramidImage.paint();
 
+
+
   waitKey(0);
+  destroyAllWindows();
+
+  Image derivative = einstein.calcFirstDerivative(3,'y');
+  derivative.paint();
+
+  waitKey(0),
   destroyAllWindows();
 
   return 0;

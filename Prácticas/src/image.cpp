@@ -10,6 +10,8 @@ int Image::num_images = 0;
 
 /* Private methods */
 
+/* Masks */
+
 Mat Image::gaussianMask(float sigma)
 {
   int mask_size = 2 * round(3 * sigma) + 1; // +-3*sigma plus the zero
@@ -34,6 +36,62 @@ Mat Image::gaussianMask(float sigma)
   return mask;
 }
 
+vector <Mat> Image::MaskFirstDerivative(float sigma, char axis)
+{
+  int mask_size = 2 * round(3 * sigma) + 1; // +-3*sigma plus the zero
+  int mask_center = round(3 * sigma);
+
+  float value = 0, sum_values = 0;
+  int mask_index;
+
+  Mat mask_x = Mat::zeros(1, mask_size, CV_32FC1);
+
+  for (int i = 0; i < mask_size; i++)
+  {
+    mask_index = i - mask_center;
+    value = -mask_index * exp(-0.5 * (mask_index * mask_index) / (2*sigma * sigma)) / sqrt(0.5);
+
+    mask_x.at<float>(Point(i,0)) = value;
+    sum_values += value;
+  }
+
+  mask_x *= 1.0 / sum_values;
+
+  // The another part
+
+  value = 0;
+  sum_values = 0;
+
+  Mat mask_1 = Mat::zeros(1, mask_size, CV_32FC1);
+
+  for (int i = 0; i < mask_size; i++)
+  {
+    mask_index = i - mask_center;
+    value = - exp(-0.5 * (mask_index * mask_index) / (2*sigma * sigma)) / sqrt(0.5);
+
+    mask_1.at<float>(Point(i,0)) = value;
+    sum_values += value;
+  }
+
+  mask_1 *= 1.0 / sum_values;
+
+  vector <Mat> derivatives;
+  if (axis == 'x')
+  {
+    derivatives.push_back(mask_x);
+    derivatives.push_back(mask_1);
+  }
+  else
+  {
+    derivatives.push_back(mask_1);
+    derivatives.push_back(mask_x);
+  }
+
+  return derivatives;
+}
+
+
+/* Convolutions */
 Mat Image::convolution1D1C(Mat &input, Mat &mask, bool reflected)
 {
   // Expand the matrix
@@ -285,7 +343,6 @@ Image Image::createHybrid(const Image &another, bool reflected, float sigma_1, f
   high = convolution2D(copy_image, mask_2, reflected);
 
   high = copy_image - high;
-  // high = high - copy_image;
 
 	output = low + high;
 
@@ -317,6 +374,35 @@ Image Image::downsample()
   }
 
   return Image(output);
+}
 
+Image Image::calcFirstDerivative(float sigma, char axis, bool reflected)
+{
+  vector<Mat> derivatives = MaskFirstDerivative(sigma,axis);
+  Mat mask = derivatives[0].clone();
 
+  flip(mask,mask,-1);
+  Mat output = image.clone();
+  cout << "Convolucion por filas" << endl;
+  // Convolution
+  for (int i = 0; i < output.rows; i++)
+  {
+    Mat row = output.row(i).clone();
+    convolution1D(row,mask,reflected).copyTo(output.row(i));
+  }
+  // Transposing for convolution by cols
+  output = output.t();
+
+  cout << "Convolucion por columnas" << endl;
+  mask = derivatives[1].clone();
+
+  for (int i = 0; i < output.rows; i++)
+  {
+    Mat row = output.row(i).clone();
+    convolution1D(row,mask,reflected).copyTo(output.row(i));
+  }
+  // Re-transposing to make the correct image
+  output = output.t();
+
+  return Image(output);
 }
