@@ -329,6 +329,14 @@ Image Image::GaussConvolution(const float sigma, bool reflected)
   return Image(convolution);
 }
 
+Image Image::highFrecuencies(const float sigma, bool reflected)
+{
+  Mat mask = gaussianMask(sigma);
+  Mat convolution = convolution2D(this->image, mask, reflected);
+
+  return Image(this->image - convolution);
+}
+
 Image Image::createHybrid(const Image &another, bool reflected, float sigma_1, float sigma_2)
 {
   Mat low, high;

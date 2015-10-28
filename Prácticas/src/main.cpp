@@ -20,12 +20,14 @@ int main(int argc, char const *argv[]) {
   Image einstein(string("imagenes/einstein.bmp"),true);
   Image marilyn(string("imagenes/marilyn.bmp"),true);
 
+  Image low = einstein.GaussConvolution(3);
   Image hybrid = einstein.createHybrid(marilyn,true,6,6);
+  Image high = marilyn.highFrecuencies(3);
 
   vector<Image*> secuencia;
-  secuencia.push_back(&einstein);
+  secuencia.push_back(&low);
   secuencia.push_back(&hybrid);
-  secuencia.push_back(&marilyn);
+  secuencia.push_back(&high);
 
   Image tira(secuencia,1,3);
   tira.paint();

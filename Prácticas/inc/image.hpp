@@ -39,6 +39,7 @@ public:
   void setPixels(const vector<Point> & pixel_list, const vector<uchar> & value_list);
 
   Image GaussConvolution(const float sigma, bool reflected = false);
+  Image highFrecuencies(const float sigma, bool reflected = false);
   Image createHybrid(const Image &another, bool reflected, float sigma_1, float sigma_2);
   Image convolution(const Mat &mask);
   Image downsample();
