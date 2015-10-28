@@ -382,7 +382,11 @@ Image Image::calcFirstDerivative(float sigma, char axis, bool reflected)
   Mat mask = derivatives[0].clone();
 
   flip(mask,mask,-1);
-  Mat output = image.clone();
+
+  // First we blur the image
+  Image tmp = GaussConvolution(3,true);
+
+  Mat output = tmp.image.clone();
 
 
   // Convolution

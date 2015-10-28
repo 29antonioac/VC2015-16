@@ -5,6 +5,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc} %Necesario para el uso de las comillas latinas.
 \usepackage{geometry}
+\usepackage{graphicx}
 
 %Importante que esta sea la última órden del preámbulo
 \usepackage{hyperref}
@@ -292,6 +293,198 @@ rulecolor=,
   Es posible que sea algo menos eficiente, pero mucho más fácil de mantener y comprender.\\
 
   Con esto ya tenemos la convolución de una imagen a través de un vector máscara.
+  Aquí pongo un ejemplo con la imagen de \textit{Lena}.
+
+  \centerline{\includegraphics[width=0.7\textwidth]{LenaConv.png}}
+
+
+  \section{Imágenes Híbridas}
+
+  Una imagen híbrida es una \"mezcla\" de dos imágenes, donde de una tomamos las altas
+  frecuencias y de la otra las bajas. Al unirlas, podemos lograr el efecto de
+  ver una de ellas mientras estemos cerca y la otra si miramos desde lejos.\\
+
+  Utilizando el filtro Gaussiano conseguimos funciones para generar imágenes de alta
+  y baja frecuencia,
+
+  [Insertar código, HAY QUE HACERLO, LO HE HECHO MAL]
+
+  Las sumamos y conseguimos este resultado
+
+  \centerline{\includegraphics[width=0.7\textwidth]{Hybrid.png}}
+
+  \section{Pirámide Gaussiana}
+
+  Para realizar la pirámide, no tenemos más que realizar un \textit{downsampling}
+  a la imagen. Para ello hemos realizado este pequeño bonus implementando el
+  \textit{downsampling}, y no usando \textit{pyrDown()}.\\
+
+  Tomando 2 índices para cada imagen, es fácil quitarnos las filas y columnas pares.
+  Es importante, como hemos visto en teoría, alisar antes la imagen. Tomamos $\sigma=1$
+  para que sean 3 píxeles los que se miren. No tiene sentido hacerlo mayor, ya que
+  vamos a quitar muchos píxeles vecinos.
+
+  \begin{lstlisting}
+    Image Image::downsample()
+    {
+      // Classic technique: Blur and downsample (deleting odd cols and rows)
+      Mat output = Mat::zeros(image.rows / 2, image.cols / 2, image.type());
+
+      int i1, i2;
+      int j1, j2;
+
+      Mat mask = gaussianMask(1);
+      Mat image_blur = convolution2D(image,mask,false);
+
+      if (image.channels() == 1)
+      {
+        for (i1 = 0, i2 = 0; i1 < image_blur.rows && i2 < output.rows; i1+=2, i2++)
+          for (j1 = 0,j2 = 0; j1 < image_blur.cols && j2 < output.cols; j1+=2,j2++)
+            output.at<float>(Point(j2,i2)) = image_blur.at<float>(Point(j1,i1));
+      }
+      else
+      {
+        for (i1 = 0, i2 = 0; i1 < image_blur.rows && i2 < output.rows; i1+=2, i2++)
+          for (j1 = 0,j2 = 0; j1 < image_blur.cols && j2 < output.cols; j1+=2,j2++)
+            output.at<Vec3b>(Point(j2,i2)) = image_blur.at<Vec3b>(Point(j1,i1));
+      }
+
+      return Image(output);
+    }
+  \end{lstlisting}
+
+  Después de aplicar esto varias veces, insertamos los resultados
+  en el mismo canvas y obtenemos el curioso resultado.
+
+  \centerline{\includegraphics[width=0.7\textwidth]{HybridPyramid.png}}
+
+  \section{Bonus 1}
+
+  Se ha implementado una función que calcula 2 máscaras para las parciales en $X$ e $Y$
+  de la Gaussiana. Recordando las parciales:
+
+  \begin{equation*}\adjustbox{max width=\hsize}{$
+   \frac{\partial G}{\partial x} = - \frac{x e^{- \frac{x^{2}}{2 \sigma^{2}}}}{\sqrt{2 \pi} \sigma^{2}} \frac{e^{- \frac{y^{2}}{2 \sigma^{2}}}}{\sqrt{2 \pi} \sigma^{2}}
+  $}\end{equation*}
+
+  Y para la derivada en $y$,
+
+  \begin{equation*}\adjustbox{max width=\hsize}{$
+   \frac{\partial G}{\partial y} = - \frac{e^{- \frac{x^{2}}{2 \sigma^{2}}}}{\sqrt{2 \pi} \sigma^{2}} y\frac{e^{- \frac{y^{2}}{2 \sigma^{2}}}}{\sqrt{2 \pi} \sigma^{2}}
+  $}\end{equation*}
+
+  Explico: la primera parte del cómputo es para el operando que tiene a la propia
+  variable multiplicando (para la parcial en $X$, por ejemplo, el primer operando).
+  La segunda es para el otro, claramente. Como son simétricos, calculamos ambas
+  y al final comprobamos el eje: Si es el $X$, tomamos la parcial en $X$ (en el orden
+  arriba indicado) y en otro caso la de $Y$.
+
+  \begin{lstlisting}
+    vector <Mat> Image::MaskFirstDerivative(float sigma, char axis)
+    {
+      int mask_size = 2 * round(3 * sigma) + 1; // +-3*sigma plus the zero
+      int mask_center = round(3 * sigma);
+
+      float value = 0, sum_values = 0;
+      int mask_index;
+
+      Mat mask_x = Mat::zeros(1, mask_size, CV_32FC1);
+
+      for (int i = 0; i < mask_size; i++)
+      {
+        mask_index = i - mask_center;
+        value = -mask_index * exp(-0.5 * (mask_index * mask_index) / (2*sigma * sigma)) * sqrt(0.5);
+
+        mask_x.at<float>(Point(i,0)) = value;
+        sum_values += value;
+      }
+
+      mask_x *= 1.0 / sum_values;
+
+      // The another part
+
+      value = 0;
+      sum_values = 0;
+
+      Mat mask_1 = Mat::zeros(1, mask_size, CV_32FC1);
+
+      for (int i = 0; i < mask_size; i++)
+      {
+        mask_index = i - mask_center;
+        value = - exp(-0.5 * (mask_index * mask_index) / (2*sigma * sigma)) * sqrt(0.5);
+
+        mask_1.at<float>(Point(i,0)) = value;
+        sum_values += value;
+      }
+
+      mask_1 *= 1.0 / sum_values;
+
+      vector <Mat> derivatives;
+      if (axis == 'x')
+      {
+        derivatives.push_back(mask_x);
+        derivatives.push_back(mask_1);
+      }
+      else
+      {
+        derivatives.push_back(mask_1);
+        derivatives.push_back(mask_x);
+      }
+
+      return derivatives;
+    }
+  \end{lstlisting}
+
+  Para hacer la prueba se ha utilizado otra función
+
+  \begin{lstlisting}
+    Image Image::calcFirstDerivative(float sigma, char axis, bool reflected)
+    {
+      vector<Mat> derivatives = MaskFirstDerivative(sigma,axis);
+      Mat mask = derivatives[0].clone();
+
+      flip(mask,mask,-1);
+
+      // First we blur the image
+      Image tmp = GaussConvolution(3,true);
+
+      Mat output = tmp.image.clone();
+
+
+      // Convolution
+      for (int i = 0; i < output.rows; i++)
+      {
+        Mat row = output.row(i).clone();
+        convolution1D(row,mask,reflected).copyTo(output.row(i));
+      }
+
+      // Transposing for convolution by cols
+      output = output.t();
+
+      mask = derivatives[1].clone();
+      flip(mask,mask,-1);
+
+      for (int i = 0; i < output.rows; i++)
+      {
+        Mat row = output.row(i).clone();
+        convolution1D(row,mask,reflected).copyTo(output.row(i));
+      }
+      // Re-transposing to make the correct image
+      output = output.t();
+
+      return Image(output);
+    }
+  \end{lstlisting}
+
+  Aquí muestro una salida con la foto de Einstein.
+
+  \centerline{\includegraphics[width=0.7\textwidth]{Derivative.png}}
+
+  
+
+
+
+
 
 
 
