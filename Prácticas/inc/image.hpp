@@ -25,6 +25,7 @@ private:
   Mat convolution2D(Mat &input, Mat &mask, bool reflected);
 
   vector<Mat> MaskFirstDerivative(float sigma, char axis);
+  vector<Mat> MaskSecondDerivative(float sigma, char axis);
 public:
   Image(string path, bool flag);
   Image(int rows, int cols);
@@ -47,6 +48,7 @@ public:
   /* Bonus */
 
   Image calcFirstDerivative(float sigma, char axis, bool reflected = false);
+  Image calcSecondDerivative(float sigma, char axis, bool reflected = false);
   Image detectEdges(double threshold1, double threshold2);
 
 

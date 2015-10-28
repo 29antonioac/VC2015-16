@@ -55,8 +55,12 @@ int main(int argc, char const *argv[]) {
 
   Image derivative_x = einstein.calcFirstDerivative(3,'x');
   Image derivative_y = einstein.calcFirstDerivative(3,'y');
+  Image derivative2_x = einstein.calcSecondDerivative(3,'x');
+  Image derivative2_y = einstein.calcSecondDerivative(3,'y');
   derivative_x.paint();
   derivative_y.paint();
+  derivative2_x.paint();
+  derivative2_y.paint();
 
   waitKey(0),
   destroyAllWindows();

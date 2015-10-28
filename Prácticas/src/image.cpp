@@ -90,6 +90,62 @@ vector <Mat> Image::MaskFirstDerivative(float sigma, char axis)
   return derivatives;
 }
 
+vector <Mat> Image::MaskSecondDerivative(float sigma, char axis)
+{
+  int mask_size = 2 * round(3 * sigma) + 1; // +-3*sigma plus the zero
+  int mask_center = round(3 * sigma);
+
+  float value = 0, sum_values = 0;
+  int mask_index;
+
+  Mat mask_x = Mat::zeros(1, mask_size, CV_32FC1);
+
+  for (int i = 0; i < mask_size; i++)
+  {
+    mask_index = i - mask_center;
+    value = (mask_index - sigma)*(mask_index + sigma) * exp(-0.5 * (mask_index * mask_index) / (2*sigma * sigma)) * sqrt(0.5) / sigma*sigma*sigma*sigma*sigma*sigma;
+
+    mask_x.at<float>(Point(i,0)) = value;
+    sum_values += value;
+  }
+
+  mask_x *= 1.0 / sum_values;
+
+  // The another part
+
+  value = 0;
+  sum_values = 0;
+
+  Mat mask_1 = Mat::zeros(1, mask_size, CV_32FC1);
+
+  for (int i = 0; i < mask_size; i++)
+  {
+    mask_index = i - mask_center;
+    value = exp(-0.5 * (mask_index * mask_index) / (2*sigma * sigma)) * sqrt(0.5);
+
+    mask_1.at<float>(Point(i,0)) = value;
+    sum_values += value;
+  }
+
+  mask_1 *= 1.0 / sum_values;
+
+  vector <Mat> derivatives;
+  if (axis == 'x')
+  {
+    derivatives.push_back(mask_x);
+    derivatives.push_back(mask_1);
+  }
+  else
+  {
+    derivatives.push_back(mask_1);
+    derivatives.push_back(mask_x);
+  }
+
+  return derivatives;
+}
+
+
+
 
 /* Convolutions */
 Mat Image::convolution1D1C(Mat &input, Mat &mask, bool reflected)
@@ -423,7 +479,44 @@ Image Image::calcFirstDerivative(float sigma, char axis, bool reflected)
   return Image(output);
 }
 
-Image Image::detectEdges(double lowThreshold, double highThreshonld)
+Image Image::calcSecondDerivative(float sigma, char axis, bool reflected)
+{
+  vector<Mat> derivatives = MaskSecondDerivative(sigma,axis);
+  Mat mask = derivatives[0].clone();
+
+  flip(mask,mask,-1);
+
+  // First we blur the image
+  Image tmp = GaussConvolution(3,true);
+
+  Mat output = tmp.image.clone();
+
+
+  // Convolution
+  for (int i = 0; i < output.rows; i++)
+  {
+    Mat row = output.row(i).clone();
+    convolution1D(row,mask,reflected).copyTo(output.row(i));
+  }
+
+  // Transposing for convolution by cols
+  output = output.t();
+
+  mask = derivatives[1].clone();
+  flip(mask,mask,-1);
+
+  for (int i = 0; i < output.rows; i++)
+  {
+    Mat row = output.row(i).clone();
+    convolution1D(row,mask,reflected).copyTo(output.row(i));
+  }
+  // Re-transposing to make the correct image
+  output = output.t();
+
+  return Image(output);
+}
+
+Image Image::detectEdges(double lowThreshold, double highThreshold)
 {
   // First of all we blur the image
   Image tmp = GaussConvolution(3,true);
@@ -431,7 +524,7 @@ Image Image::detectEdges(double lowThreshold, double highThreshonld)
   Mat edges;
 
   // Apply Canny filter!
-  Canny(tmp.image, edges, lowThreshold, highThreshonld);
+  Canny(tmp.image, edges, lowThreshold, highThreshold);
 
   // Black background
   Mat dest = Mat::zeros(tmp.image.rows, tmp.image.cols, tmp.image.type());
