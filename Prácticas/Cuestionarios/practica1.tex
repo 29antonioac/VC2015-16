@@ -223,6 +223,75 @@ rulecolor=,
     }
   \end{lstlisting}
 
+  En el caso de que la imagen tenga más de un canal, lo tenemos controlado: La función
+  antes definida sólo se llama desde otra más general, que si recibe una imagen de
+  3 canales, las separa y aplica la función a cada canal por separado, volviéndolos
+  a unir al terminar.
+
+  \begin{lstlisting}
+    Mat Image::convolution1D(Mat &input, Mat &mask, bool reflected)
+    {
+      Mat output;
+      if (input.channels() == 1)
+        output = convolution1D1C(input,mask,reflected);
+      else
+      {
+        Mat input_channels[3], output_channels[3];
+        split(input, input_channels);
+
+        for (int i = 0; i < input.channels(); i++)
+        {
+          output_channels[i] = convolution1D1C(input_channels[i],mask,reflected);
+        }
+        merge(output_channels, input.channels(), output);
+      }
+
+      return output;
+    }
+  \end{lstlisting}
+
+  \subsection{Convolución de una imagen 2D}
+
+  Llegados a este punto, nos falta poco: ahora sólo tenemos que iterar por filas
+  y columnas, utilizando las funciones antes definidas, para obtener la convolución
+  de la imagen en su totalidad.
+
+  \begin{lstlisting}
+    Mat Image::convolution2D(Mat &input, Mat &mask, bool reflected)
+    {
+      flip(mask,mask,-1);
+      Mat output = input.clone();
+
+      // Convolution
+      for (int i = 0; i < output.rows; i++)
+      {
+        Mat row = output.row(i).clone();
+        convolution1D(row,mask,reflected).copyTo(output.row(i));
+      }
+      // Transposing for convolution by cols
+      output = output.t();
+
+      for (int i = 0; i < output.rows; i++)
+      {
+        Mat row = output.row(i).clone();
+        convolution1D(row,mask,reflected).copyTo(output.row(i));
+      }
+      // Re-transposing to make the correct image
+      output = output.t();
+
+      return output;
+    }
+  \end{lstlisting}
+
+  Primero hacemos \textit{flip} con la máscara en ambos ejes, es una función ya
+  definida en OpenCV. Al recibir un número negativo da la vuelta en ambos ejes.
+  Después de eso, itero sobre cada fila, llamamos a \textit{Convolution1D}, y escribimos
+  en la imagen de salida. Luego trasponemos la matriz y hacemos lo mismo. ¿Por qué
+  trasponer la matriz? Así nos ahorramos comprobaciones dentro de los métodos: si es
+  un vector fila, columna, ahora toma de abajo arriba en vez de izquierda a derecha...
+  Es posible que sea algo menos eficiente, pero mucho más fácil de mantener y comprender.\\
+
+  Con esto ya tenemos la convolución de una imagen a través de un vector máscara.
 
 
 
