@@ -302,7 +302,9 @@ void Image::paint()
 {
   string window_name = std::to_string(ID) + "-" + name;
   namedWindow(window_name,WINDOW_AUTOSIZE);
-  imshow(window_name,image);
+  Mat output;
+  this->image.convertTo(output, CV_8U);
+  imshow(window_name,output);
 }
 
 void Image::setPixels(const vector<Point> & pixel_list, const vector<Vec3b> & value_list)
