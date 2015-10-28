@@ -74,7 +74,7 @@ rulecolor=,
   basicstyle=\footnotesize,
 %  identifierstyle=\color{magenta},
   keywordstyle=\color[rgb]{0,0,1},
-  commentstyle=\color{Darkgreen},
+  commentstyle=\color[rgb]{0.026,0.112,0.095}, % Darkgreen
   stringstyle=\color{red}
   }
 % Slightly bigger margins than the latex defaults
@@ -136,21 +136,92 @@ rulecolor=,
   y de un valor $\sigma$ , generar un vector máscara representativo. Para conseguirlo,
   debemos recordar que para que la máscara sea significativa debe contener la región
   $[-3\sigma,3\sigma]$. Sabiendo esto, la longitud de la máscara podremos conseguirla
-  aplicando en $C++$ esta operación:
+  aplicando en \textit{C++} esta operación:
   es
 
   \begin{lstlisting}
     float dimension = 2*round(3*sigma) + 1;
   \end{lstlisting}
 
-  ¿Por qué? Pues porque así conseguimos discretizar $3*\sigma$ y que la máscara
-  tenga en ambos lados dicha longitud. Luego sumamos $1$ para contar también el centro.
+  ¿Por qué? Pues porque así conseguimos discretizar $3\sigma$ y que la máscara
+  tenga en ambos lados dicha longitud. Luego sumamos $1$ para contar también el centro.\\
 
   Una vez tenemos la dimensión de la máscara, debemos aplicar $f(x)$ a los índices
   de nuestra máscara. Es decir, para $\sigma = 1$, la dimensión sería $7$, y los
   índices de la máscara $[-3,-2,-1,0,1,2,3]$, pues debemos aplicar $f(x)$ a dichos
-  valores para obtener nuestro vector máscara.
+  valores para obtener nuestro vector máscara. No debemos olvidarnos de normalizar
+  la máscara como último paso.
 
+  \begin{lstlisting}
+    Mat Image::gaussianMask(float sigma)
+    {
+      int mask_size = 2 * round(3 * sigma) + 1; // +-3*sigma plus the zero
+      int mask_center = round(3 * sigma);
+
+      float value = 0, sum_values = 0;
+      int mask_index;
+
+      Mat mask = Mat::zeros(1, mask_size, CV_32FC1);
+
+      for (int i = 0; i < mask_size; i++)
+      {
+        mask_index = i - mask_center;
+        value = exp(-0.5 * (mask_index * mask_index) / (sigma * sigma));
+
+        mask.at<float>(Point(i,0)) = value;
+        sum_values += value;
+      }
+
+      mask *= 1.0 / sum_values;
+
+      return mask;
+    }
+  \end{lstlisting}
+
+  \subsection{Aplicación del vector máscara sobre una fila}
+
+  El siguiente paso es aplicar dicha máscara sobre un vector fila. Para ello, debemos
+  expandir el vector de entrada (a partir de ahora, vector señal) para poder tomar
+  algún píxel vecino a los de los extremos de la imagen, para poder pasar por ellos también
+  la máscara. En este caso hemos trabajado con los modos \textit{Reflejado} y \textit{Constante}.
+  Para ello hemos utilizado la función de OpenCV \textit{copyMakeBorder}, que es
+  muy versátil y nos permite copiar una imagen en otra con un determinado borde.
+  Nos permite también decidir el modo de expansión que queremos, que en nuestro caso,
+  como hemos indicado, son \textit{Reflejado} y \textit{Constante}.\\
+
+  La lógica es la siguiente: expandimos la imagen, y luego, vamos extrayendo
+  un ROI del mismo tamaño de la máscara por todo el vector, realizando en cada
+  iteración el producto escalar entre el ROI y la máscara. Este resultado lo vamos
+  volcando en una imagen de salida.
+
+  \begin{lstlisting}
+    Mat Image::convolution1D1C(Mat &input, Mat &mask, bool reflected)
+    {
+      // Expand the matrix
+      Mat expanded, copy_input;
+      int borderType = BORDER_CONSTANT;
+      int offset = (mask.cols - 1) / 2;
+
+      if (reflected)
+        borderType = BORDER_REFLECT;
+
+
+      copyMakeBorder(input,expanded,0,0,offset,offset,borderType,0);
+
+      // Convolution!
+      Mat ROI;
+      Mat output = Mat::zeros(1, input.cols, CV_32FC1);
+      expanded.convertTo(expanded,CV_32FC1);
+
+      for (int i = 0; i < input.cols; i++) // Index are OK
+      {
+        ROI = Mat(expanded, Rect(i,0,mask.cols,1));
+        output.at<float>(Point(i,0)) = ROI.dot(mask);
+      }
+
+      return output;
+    }
+  \end{lstlisting}
 
 
 
