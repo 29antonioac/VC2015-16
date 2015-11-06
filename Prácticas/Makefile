@@ -8,7 +8,6 @@
 
 .SUFFIXES:
 .PHONY: start, exec, all, compile, clean, tar
-# .PHONY: all, compile, clean, tar
 
 INC					:= ./inc
 BIN					:= ./bin
@@ -16,12 +15,13 @@ OBJ					:= ./obj
 SRC					:= ./src
 
 
-target_name         := $(BIN)/practica1
+target_name         := $(BIN)/main
 opt_dbg_flag        := -g
 exit_first          := -Wfatal-errors
 warn_all            := -Wall
-##warn_all          :=
+
 units_ext           := $(wildcard $(SRC)/*.cpp $(SRC)/*.cc $(SRC)/*.c)
+units_ext						:= $(filter-out $(wildcard $(SRC)/practica*.cpp), $(units_ext))
 headers             := $(wildcard $(INC)/*.hpp $(INC)/*.hh $(INC)/*.h)
 ##units_ext           :=  main practica1 error-ogl
 comp_version		:= -std=c++11
