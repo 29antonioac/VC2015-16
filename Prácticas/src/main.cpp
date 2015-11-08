@@ -98,16 +98,20 @@ int main(int argc, char const *argv[]) {
   Mat im = imread("imagenes/yosemite1.jpg");
   Mat im_2 = imread("imagenes/yosemite2.jpg");
 
+  Mat im_copy = im.clone();
+  Mat im_2_copy = im_2.clone();
+
   std::vector<cv::KeyPoint> keypointsA[2], keypointsB[2];
   Mat descriptorsA[2], descriptorsB[2];
 
-  int Threshl=60;
-  int Octaves=4;
+  int Threshl=65;
+  int Octaves=3;
   float PatternScales=1.0f;
 
   circle_radius = 5;
   circle_thickness = 1;
 
+  /* BRISK */
   cv::Ptr<cv::BRISK> ptrBrisk = cv::BRISK::create(Threshl,Octaves,PatternScales);
 
   ptrBrisk->detect(im, keypointsA[0]);
@@ -126,16 +130,16 @@ int main(int argc, char const *argv[]) {
     circle(im_2,keypointsA[1][i].pt, circle_radius, Scalar(255,0,0), circle_thickness);
   }
 
+  /* ORB */
   cv::Ptr<cv::ORB> ptrORB = cv::ORB::create();
 
-  ptrBrisk->detect(im, keypointsB[0]);
-  ptrBrisk->compute(im, keypointsB[0],descriptorsB[0]);
+  ptrORB->detect(im_copy, keypointsB[0]);
+  ptrORB->compute(im_copy, keypointsB[0],descriptorsB[0]);
 
-  ptrBrisk->detect(im_2, keypointsB[1]);
-  ptrBrisk->compute(im_2, keypointsB[1],descriptorsB[1]);
+  ptrORB->detect(im_2_copy, keypointsB[1]);
+  ptrORB->compute(im_2_copy, keypointsB[1],descriptorsB[1]);
 
-  Mat im_copy = im.clone();
-  Mat im_2_copy = im_2.clone();
+
 
   for (int i = 0; i < keypointsB[0].size(); i++)
   {
@@ -151,6 +155,67 @@ int main(int argc, char const *argv[]) {
   imshow("Brisk2", im_2);
   imshow("ORB1",im_copy);
   imshow("ORB2",im_2_copy);
+  waitKey(0);
+  destroyAllWindows();
+
+  /* Excersice 3 */
+  /* BFMatcher */
+  BFMatcher BFmatcherBRISK(NORM_L2, true);
+  BFMatcher BFmatcherORB(NORM_L2, true);
+
+  vector<DMatch> BFmatchesBRISK, BFmatchesORB;
+  BFmatcherBRISK.match(descriptorsA[0], descriptorsA[1], BFmatchesBRISK);
+  BFmatcherORB.match(descriptorsB[0], descriptorsB[1], BFmatchesORB);
+
+  Mat BFall_matchesBRISK, BFall_matchesORB;
+  drawMatches( im, keypointsA[0], im_2, keypointsA[1],
+                       BFmatchesBRISK, BFall_matchesBRISK, Scalar::all(-1), Scalar::all(-1),
+                       vector<char>(),cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
+
+  drawMatches( im_copy, keypointsB[0], im_2_copy, keypointsB[1],
+                      BFmatchesORB, BFall_matchesORB, Scalar::all(-1), Scalar::all(-1),
+                      vector<char>(),cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
+  imshow( "BRISK All Matches BFMatcher", BFall_matchesBRISK );
+  imshow( "ORB All Matches BFMatcher", BFall_matchesORB );
+  waitKey(0);
+  destroyAllWindows();
+
+  /* FlannBasedMatcher */
+
+  FlannBasedMatcher FlmatcherBRISK;
+  FlannBasedMatcher FlmatcherORB;
+
+  vector<DMatch> FlmatchesBRISK, FlmatchesORB;
+
+
+  // Neccesary for FlannBasedMatcher!
+  for (int i = 0; i < 2; i++)
+  {
+    if (descriptorsA[i].type() != CV_32F)
+      descriptorsA[i].convertTo(descriptorsA[i], CV_32F);
+  }
+
+  for (int i = 0; i < 2; i++)
+  {
+    if (descriptorsB[i].type() != CV_32F)
+      descriptorsB[i].convertTo(descriptorsB[i], CV_32F);
+  }
+  // -------------------------------
+
+  FlmatcherBRISK.match(descriptorsA[0], descriptorsA[1], FlmatchesBRISK);
+
+  FlmatcherORB.match(descriptorsB[0], descriptorsB[1], FlmatchesORB);
+
+  Mat Flall_matchesBRISK, Flall_matchesORB;
+  drawMatches( im, keypointsA[0], im_2, keypointsA[1],
+                       FlmatchesBRISK, Flall_matchesBRISK, Scalar::all(-1), Scalar::all(-1),
+                       vector<char>(),cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
+
+  drawMatches( im_copy, keypointsB[0], im_2_copy, keypointsB[1],
+                      FlmatchesORB, Flall_matchesORB, Scalar::all(-1), Scalar::all(-1),
+                      vector<char>(),cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
+  imshow( "BRISK All Matches FlannMatcher", Flall_matchesBRISK );
+  imshow( "ORB All Matches FlannMatcher", Flall_matchesORB );
   waitKey(0);
   destroyAllWindows();
 
