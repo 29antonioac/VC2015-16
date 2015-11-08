@@ -1,12 +1,15 @@
 #include "../inc/image.hpp"
 #include "../inc/utils.hpp"
 #include <iostream>
+#include <opencv2/features2d/features2d.hpp>
 
 using namespace std;
 using namespace cv;
 
 
 int main(int argc, char const *argv[]) {
+
+  /* Excersice 1 */
   Image input(string("imagenes/Tablero1.jpg"),true);
   Image dest(string("imagenes/Tablero2.jpg"),true);
 
@@ -88,6 +91,66 @@ int main(int argc, char const *argv[]) {
   Image canvas(sequence, 2, 2);
   canvas.paint();
 
+  waitKey(0);
+  destroyAllWindows();
+
+  /* Excersice 2 */
+  Mat im = imread("imagenes/yosemite1.jpg");
+  Mat im_2 = imread("imagenes/yosemite2.jpg");
+
+  std::vector<cv::KeyPoint> keypointsA[2], keypointsB[2];
+  Mat descriptorsA[2], descriptorsB[2];
+
+  int Threshl=60;
+  int Octaves=4;
+  float PatternScales=1.0f;
+
+  circle_radius = 5;
+  circle_thickness = 1;
+
+  cv::Ptr<cv::BRISK> ptrBrisk = cv::BRISK::create(Threshl,Octaves,PatternScales);
+
+  ptrBrisk->detect(im, keypointsA[0]);
+  ptrBrisk->compute(im, keypointsA[0],descriptorsA[0]);
+
+  ptrBrisk->detect(im_2, keypointsA[1]);
+  ptrBrisk->compute(im_2, keypointsA[1],descriptorsA[1]);
+
+  for (int i = 0; i < keypointsA[0].size(); i++)
+  {
+    circle(im,keypointsA[0][i].pt, circle_radius, Scalar(255,0,0), circle_thickness);
+  }
+
+  for (int i = 0; i < keypointsA[1].size(); i++)
+  {
+    circle(im_2,keypointsA[1][i].pt, circle_radius, Scalar(255,0,0), circle_thickness);
+  }
+
+  cv::Ptr<cv::ORB> ptrORB = cv::ORB::create();
+
+  ptrBrisk->detect(im, keypointsB[0]);
+  ptrBrisk->compute(im, keypointsB[0],descriptorsB[0]);
+
+  ptrBrisk->detect(im_2, keypointsB[1]);
+  ptrBrisk->compute(im_2, keypointsB[1],descriptorsB[1]);
+
+  Mat im_copy = im.clone();
+  Mat im_2_copy = im_2.clone();
+
+  for (int i = 0; i < keypointsB[0].size(); i++)
+  {
+    circle(im_copy,keypointsB[0][i].pt, circle_radius, Scalar(0,0,255), circle_thickness);
+  }
+
+  for (int i = 0; i < keypointsB[1].size(); i++)
+  {
+    circle(im_2_copy,keypointsB[1][i].pt, circle_radius, Scalar(0,0,255), circle_thickness);
+  }
+
+  imshow("Brisk", im);
+  imshow("Brisk2", im_2);
+  imshow("ORB1",im_copy);
+  imshow("ORB2",im_2_copy);
   waitKey(0);
   destroyAllWindows();
 
