@@ -7,6 +7,7 @@ using std::cout;
 using std::endl;
 
 int Image::num_images = 0;
+const int Image::DISPLAY_WIDTH = 1366, Image::DISPLAY_HEIGHT = 768;
 
 /* Private methods */
 
@@ -238,12 +239,12 @@ Image::Image(int rows, int cols)
   name = "zeros";
 }
 
-Image::Image(const Mat& input)
+Image::Image(const Mat& input, string name)
 {
   num_images++;
   ID = num_images;
   image = input.clone();
-  name = "Mat";
+  this->name = name;
 }
 
 Image::Image(const Image& img)
@@ -357,7 +358,11 @@ Image::Image(const vector<Image*> & sequence, unsigned int rows, unsigned int co
 void Image::paint()
 {
   string window_name = std::to_string(ID) + "-" + name;
-  namedWindow(window_name,WINDOW_AUTOSIZE);
+  namedWindow(window_name,WINDOW_NORMAL);
+
+  if (this->image.cols > DISPLAY_WIDTH || this->image.rows > DISPLAY_HEIGHT)
+    resizeWindow(window_name, min(DISPLAY_WIDTH,this->image.cols), min(DISPLAY_HEIGHT,this->image.rows));
+
   Mat output;
   this->image.convertTo(output, CV_8U);
   imshow(window_name,output);
@@ -533,4 +538,18 @@ Image Image::detectEdges(double lowThreshold, double highThreshold)
   tmp.image.copyTo(dest, edges);
 
   return Image(dest);
+}
+
+Image Image::warpPerspective(Homography hom)
+{
+  Mat output;
+
+  cv::warpPerspective(this->image, output, hom.getHomography(), Size(output.cols, output.rows));
+
+  return Image(output, this->name + " warped");
+}
+
+void Image::drawCircle(Point p, int radius, Scalar color, int thickness)
+{
+  circle(this->image,p,radius,color,thickness);
 }

@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include "utils.hpp"
+#include "homography.hpp"
 
 using namespace cv;
 using std::string;
@@ -18,6 +19,7 @@ private:
   string name;
   static int num_images;
   int ID;
+  static const int DISPLAY_WIDTH, DISPLAY_HEIGHT;
 
   Mat gaussianMask(float sigma);
   Mat convolution1D1C(Mat &input, Mat &mask, bool reflected);
@@ -29,7 +31,7 @@ private:
 public:
   Image(string path, bool flag);
   Image(int rows, int cols);
-  Image(const Mat& input);
+  Image(const Mat& input, string name = "Mat");
   Image(const Image& img);
   Image(const vector<Image*> & sequence, unsigned int rows, unsigned int cols);
 
@@ -45,11 +47,16 @@ public:
   Image convolution(const Mat &mask);
   Image downsample();
 
-  /* Bonus */
+  /* Bonus 1 */
 
   Image calcFirstDerivative(float sigma, char axis, bool reflected = false);
   Image calcSecondDerivative(float sigma, char axis, bool reflected = false);
   Image detectEdges(double threshold1, double threshold2);
+
+  /* Work 2 */
+
+  Image warpPerspective(Homography hom);
+  void drawCircle(Point p, int radius, Scalar color, int thickness = 1);
 
 
 

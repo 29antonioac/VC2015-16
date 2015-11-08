@@ -7,11 +7,8 @@ using namespace cv;
 
 
 int main(int argc, char const *argv[]) {
-  Mat input = imread("imagenes/Tablero1.jpg", 1);
-	Mat dest = imread("imagenes/Tablero2.jpg", 1);
-	Mat output_good, output_bad;
-
-  Mat input_copy = input.clone();
+  Image input(string("imagenes/Tablero1.jpg"),true);
+  Image dest(string("imagenes/Tablero2.jpg"),true);
 
 	vector<Point> origin, destination;
 
@@ -37,56 +34,59 @@ int main(int argc, char const *argv[]) {
 	destination.push_back(Point(76 , 387));
 	destination.push_back(Point(431, 443));
 
-	Mat hom = homography(origin, destination);
-	warpPerspective(input_copy,output_good,hom,Size(output_good.cols,output_good.rows));
+  Homography hom(origin, destination);
+	Image output_good = input.warpPerspective(hom);
+
+  vector<Point> another_origin, another_destination;
+
+	another_origin.push_back(Point(156,  47));
+	another_origin.push_back(Point(177,  46));
+	another_origin.push_back(Point(155,  72));
+	another_origin.push_back(Point(175,  70));
+	another_origin.push_back(Point(198,  43));
+	another_origin.push_back(Point(197,  67));
+	another_origin.push_back(Point(219,  66));
+	another_origin.push_back(Point(153,  95));
+	another_origin.push_back(Point(152, 120));
+	another_origin.push_back(Point(173, 119));
+
+	another_destination.push_back(Point(150, 14));
+	another_destination.push_back(Point(174, 19));
+	another_destination.push_back(Point(142, 40));
+	another_destination.push_back(Point(167, 46));
+	another_destination.push_back(Point(198, 24));
+	another_destination.push_back(Point(191, 51));
+	another_destination.push_back(Point(217, 56));
+	another_destination.push_back(Point(137, 63));
+	another_destination.push_back(Point(131, 90));
+	another_destination.push_back(Point(157, 95));
+
+  Homography hom2(another_origin, another_destination);
+	Image output_bad = input.warpPerspective(hom2);
 
   int circle_radius = 10;
   int circle_thickness = 3;
 
   for (int i = 0; i < origin.size(); i++)
   {
-    circle(input,origin[i],circle_radius,Scalar(0,0,255),circle_thickness);
-    circle(dest,destination[i],circle_radius,Scalar(0,0,255),circle_thickness);
+    input.drawCircle(origin[i], circle_radius, Scalar(255,0,0), circle_thickness);
+    dest.drawCircle(destination[i], circle_radius, Scalar(255,0,0), circle_thickness);
   }
 
-	origin.clear();
-	destination.clear();
-
-	origin.push_back(Point(156,  47));
-	origin.push_back(Point(177,  46));
-	origin.push_back(Point(155,  72));
-	origin.push_back(Point(175,  70));
-	origin.push_back(Point(198,  43));
-	origin.push_back(Point(197,  67));
-	origin.push_back(Point(219,  66));
-	origin.push_back(Point(153,  95));
-	origin.push_back(Point(152, 120));
-	origin.push_back(Point(173, 119));
-
-	destination.push_back(Point(150, 14));
-	destination.push_back(Point(174, 19));
-	destination.push_back(Point(142, 40));
-	destination.push_back(Point(167, 46));
-	destination.push_back(Point(198, 24));
-	destination.push_back(Point(191, 51));
-	destination.push_back(Point(217, 56));
-	destination.push_back(Point(137, 63));
-	destination.push_back(Point(131, 90));
-	destination.push_back(Point(157, 95));
-
-  hom = homography(origin, destination);
-	warpPerspective(input_copy,output_bad,hom,Size(output_bad.cols,output_bad.rows));
-
-  for (int i = 0; i < origin.size(); i++)
+  for (int i = 0; i < another_origin.size(); i++)
   {
-    circle(input,origin[i],circle_radius,Scalar(255,0,0),circle_thickness);
-    circle(dest,destination[i],circle_radius,Scalar(255,0,0),circle_thickness);
+    input.drawCircle(another_origin[i], circle_radius, Scalar(0,0,255), circle_thickness);
+    dest.drawCircle(another_destination[i], circle_radius, Scalar(0,0,255), circle_thickness);
   }
 
-  imshow("Original", input);
-	imshow("Output_good", output_good);
-  imshow("Output_bad",output_bad);
-  imshow("Destination", dest);
+  vector<Image*> sequence;
+  sequence.push_back(&input);
+  sequence.push_back(&dest);
+  sequence.push_back(&output_good);
+  sequence.push_back(&output_bad);
+
+  Image canvas(sequence, 2, 2);
+  canvas.paint();
 
   waitKey(0);
   destroyAllWindows();
