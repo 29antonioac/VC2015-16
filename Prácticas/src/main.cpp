@@ -7,69 +7,86 @@ using namespace cv;
 
 
 int main(int argc, char const *argv[]) {
+  Mat input = imread("imagenes/Tablero1.jpg", 1);
+	Mat dest = imread("imagenes/Tablero2.jpg", 1);
+	Mat output_good, output_bad;
 
+  Mat input_copy = input.clone();
 
-  Image lena(string("imagenes/lena.jpg"),false);
-  Image lena_conv = lena.GaussConvolution(3);
-  lena.paint();
-  lena_conv.paint();
+	vector<Point> origin, destination;
 
-  waitKey(0);
-  destroyAllWindows();
+	origin.push_back(Point(156,  49));
+	origin.push_back(Point(530,  13));
+	origin.push_back(Point(215,  90));
+	origin.push_back(Point(474, 103));
+	origin.push_back(Point(362, 134));
+	origin.push_back(Point(305, 330));
+	origin.push_back(Point(184, 348));
+	origin.push_back(Point(438, 397));
+	origin.push_back(Point(137, 422));
+	origin.push_back(Point(527, 464));
 
-  Image einstein(string("imagenes/einstein.bmp"),true);
-  Image marilyn(string("imagenes/marilyn.bmp"),true);
+	destination.push_back(Point(148,  14));
+	destination.push_back(Point(502,  96));
+	destination.push_back(Point(212,  80));
+	destination.push_back(Point(446, 157));
+	destination.push_back(Point(347, 160));
+	destination.push_back(Point(264, 322));
+	destination.push_back(Point(138, 323));
+	destination.push_back(Point(374, 386));
+	destination.push_back(Point(76 , 387));
+	destination.push_back(Point(431, 443));
 
-  Image low = einstein.GaussConvolution(3);
-  Image hybrid = einstein.createHybrid(marilyn,true,6,6);
-  Image high = marilyn.highFrecuencies(3);
+	Mat hom = homography(origin, destination);
+	warpPerspective(input_copy,output_good,hom,Size(output_good.cols,output_good.rows));
 
-  vector<Image*> secuencia;
-  secuencia.push_back(&low);
-  secuencia.push_back(&hybrid);
-  secuencia.push_back(&high);
+  int circle_radius = 10;
+  int circle_thickness = 3;
 
-  Image tira(secuencia,1,3);
-  tira.paint();
+  for (int i = 0; i < origin.size(); i++)
+  {
+    circle(input,origin[i],circle_radius,Scalar(0,0,255),circle_thickness);
+    circle(dest,destination[i],circle_radius,Scalar(0,0,255),circle_thickness);
+  }
 
-  waitKey(0);
-  destroyAllWindows();
+	origin.clear();
+	destination.clear();
 
-  vector<Image*> pyramid;
-  Image hybrid_d1 = hybrid.downsample();
-  Image hybrid_d2 = hybrid_d1.downsample();
-  Image hybrid_d3 = hybrid_d2.downsample();
-  Image hybrid_d4 = hybrid_d3.downsample();
-  pyramid.push_back(&hybrid);
-  pyramid.push_back(&hybrid_d1);
-  pyramid.push_back(&hybrid_d2);
-  pyramid.push_back(&hybrid_d3);
-  pyramid.push_back(&hybrid_d4);
+	origin.push_back(Point(156,  47));
+	origin.push_back(Point(177,  46));
+	origin.push_back(Point(155,  72));
+	origin.push_back(Point(175,  70));
+	origin.push_back(Point(198,  43));
+	origin.push_back(Point(197,  67));
+	origin.push_back(Point(219,  66));
+	origin.push_back(Point(153,  95));
+	origin.push_back(Point(152, 120));
+	origin.push_back(Point(173, 119));
 
-  Image pyramidImage(pyramid, 1,5);
+	destination.push_back(Point(150, 14));
+	destination.push_back(Point(174, 19));
+	destination.push_back(Point(142, 40));
+	destination.push_back(Point(167, 46));
+	destination.push_back(Point(198, 24));
+	destination.push_back(Point(191, 51));
+	destination.push_back(Point(217, 56));
+	destination.push_back(Point(137, 63));
+	destination.push_back(Point(131, 90));
+	destination.push_back(Point(157, 95));
 
-  pyramidImage.paint();
+  hom = homography(origin, destination);
+	warpPerspective(input_copy,output_bad,hom,Size(output_bad.cols,output_bad.rows));
 
-  waitKey(0);
-  destroyAllWindows();
+  for (int i = 0; i < origin.size(); i++)
+  {
+    circle(input,origin[i],circle_radius,Scalar(255,0,0),circle_thickness);
+    circle(dest,destination[i],circle_radius,Scalar(255,0,0),circle_thickness);
+  }
 
-  Image derivative_x = einstein.calcFirstDerivative(3,'x');
-  Image derivative_y = einstein.calcFirstDerivative(3,'y');
-  Image derivative2_x = einstein.calcSecondDerivative(3,'x');
-  Image derivative2_y = einstein.calcSecondDerivative(3,'y');
-  derivative_x.paint();
-  derivative_y.paint();
-  derivative2_x.paint();
-  derivative2_y.paint();
-
-  waitKey(0),
-  destroyAllWindows();
-
-  Image bicycle(string("imagenes/bicycle.bmp"),true);
-  Image edges_bicycle = bicycle.detectEdges(40,60);
-
-  bicycle.paint();
-  edges_bicycle.paint();
+  imshow("Original", input);
+	imshow("Output_good", output_good);
+  imshow("Output_bad",output_bad);
+  imshow("Destination", dest);
 
   waitKey(0);
   destroyAllWindows();
