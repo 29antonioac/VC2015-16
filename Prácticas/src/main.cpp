@@ -293,27 +293,27 @@ int main(int argc, char const *argv[]) {
   cout << "Getting matches..." << endl;
   for (int i = 0; i < YOSEMITE_IMAGES - 1; i++)
   {
-    FlmatcherBRISK.match(descriptorsYosemite[i], descriptorsYosemite[i+1], BFMatchesYosemite[i]);
+    BFmatcherBRISK.match(descriptorsYosemite[i], descriptorsYosemite[i+1], BFMatchesYosemite[i]);
   }
 
   cout << "Initializing output..." << endl;
   Mat yosemite_output = Mat::zeros((int)3*yosemite[0].rows, 7 * yosemite[0].cols, CV_32FC3);
   cout << "HOla" << endl;
 
-  int offset_x = 200;
+  int offset_x = 600;
   int offset_y = 200;
 
   pointsOrigin.clear();
   pointsDestination.clear();
 
   pointsOrigin.push_back(Point2f(0, 0));
-	pointsOrigin.push_back(Point2f(yosemite[0].cols, 0));
-	pointsOrigin.push_back(Point2f(0, yosemite[0].rows));
-	pointsOrigin.push_back(Point2f(yosemite[0].cols, yosemite[0].rows));
+	pointsOrigin.push_back(Point2f(yosemite[YOSEMITE_IMAGES/2].cols, 0));
+	pointsOrigin.push_back(Point2f(0, yosemite[YOSEMITE_IMAGES/2].rows));
+	pointsOrigin.push_back(Point2f(yosemite[YOSEMITE_IMAGES/2].cols, yosemite[YOSEMITE_IMAGES/2].rows));
 	pointsDestination.push_back(Point2f(offset_x, offset_y));
-	pointsDestination.push_back(Point2f(offset_x+yosemite[0].cols, offset_y));
-	pointsDestination.push_back(Point2f(offset_x, yosemite[0].rows+offset_y));
-	pointsDestination.push_back(Point2f(yosemite[0].cols+offset_x, yosemite[0].rows+offset_y));
+	pointsDestination.push_back(Point2f(offset_x+yosemite[YOSEMITE_IMAGES/2].cols, offset_y));
+	pointsDestination.push_back(Point2f(offset_x, yosemite[YOSEMITE_IMAGES/2].rows+offset_y));
+	pointsDestination.push_back(Point2f(yosemite[YOSEMITE_IMAGES/2].cols+offset_x, yosemite[YOSEMITE_IMAGES/2].rows+offset_y));
 
 	//hom_zero = getHomography(p1, p2);
 	first_homography = findHomography(pointsOrigin, pointsDestination);
@@ -322,11 +322,11 @@ int main(int argc, char const *argv[]) {
   final_homography = first_homography.clone();
   // final_homography = Mat::eye(3,3, CV_32F);
   cout << "HOla2" << endl;
-  warpPerspective(yosemite[0], yosemite_output, first_homography, Size(yosemite_output.cols, yosemite_output.rows), INTER_LINEAR, BORDER_CONSTANT);
+  warpPerspective(yosemite[YOSEMITE_IMAGES/2], yosemite_output, first_homography, Size(yosemite_output.cols, yosemite_output.rows), INTER_LINEAR, BORDER_CONSTANT);
 
   cout << "Getting output..." << endl;
 
-  for (int i = 1; i < YOSEMITE_IMAGES; i++)
+  for (int i = YOSEMITE_IMAGES/2+1; i < YOSEMITE_IMAGES; i++)
   {
     cout << "Mixing " << i << " with " << i+1 << endl;
     pointsOrigin.clear();
@@ -334,12 +334,33 @@ int main(int argc, char const *argv[]) {
 
     for( int j = 0; j < BFMatchesYosemite[i-1].size(); j++ )
     {
-      // cout << "Match = " << j << endl;
      // Get the keypoints from the matches
      pointsOrigin.push_back( keypointsYosemite[i-1][ BFMatchesYosemite[i-1][j].queryIdx ].pt );
      pointsDestination.push_back( keypointsYosemite[i][ BFMatchesYosemite[i-1][j].trainIdx ].pt );
     }
     actual_homography = findHomography(pointsDestination, pointsOrigin, CV_RANSAC);
+    actual_homography.convertTo(actual_homography, CV_32F);
+
+    final_homography = final_homography * actual_homography;
+
+    warpPerspective(yosemite[i], yosemite_output, final_homography, Size(yosemite_output.cols, yosemite_output.rows), INTER_LINEAR, BORDER_TRANSPARENT);
+  }
+
+  final_homography = first_homography.clone();
+
+  for (int i = YOSEMITE_IMAGES/2 - 1; i >= 0; i--)
+  {
+    cout << "Mixing " << i+1 << " with " << i << endl;
+    pointsOrigin.clear();
+    pointsDestination.clear();
+
+    for( int j = 0; j < BFMatchesYosemite[i].size(); j++ )
+    {
+     // Get the keypoints from the matches
+     pointsOrigin.push_back( keypointsYosemite[i][ BFMatchesYosemite[i][j].queryIdx ].pt );
+     pointsDestination.push_back( keypointsYosemite[i+1][ BFMatchesYosemite[i][j].trainIdx ].pt );
+    }
+    actual_homography = findHomography(pointsOrigin, pointsDestination, CV_RANSAC);
     actual_homography.convertTo(actual_homography, CV_32F);
 
     final_homography = final_homography * actual_homography;
