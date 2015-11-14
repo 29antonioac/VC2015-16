@@ -13,7 +13,5 @@ using std::vector;
 
 string SplitFilename (const string& str);
 
-Mat homograpyEquationMatrix(vector<Point> origin, vector<Point> destination);
-Mat homography(vector<Point> origin, vector<Point> destination);
 
 #endif
