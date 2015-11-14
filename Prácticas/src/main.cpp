@@ -9,6 +9,112 @@
 using namespace std;
 using namespace cv;
 
+Mat makePanorama(vector<Mat> & images)
+{
+  const int num_images = images.size();
+  vector<KeyPoint> keypoints[num_images];
+  Mat descriptors[num_images];
+  vector<DMatch> BFMatches[num_images-1];
+  Mat actual_homography, first_homography, final_homography;
+
+  // Using previous ptrBrisk and BFmatcherBRISK
+  int Threshl=65;
+  int Octaves=3;
+  float PatternScales=1.0f;
+
+  Ptr<BRISK> ptrBrisk = BRISK::create(Threshl,Octaves,PatternScales);
+  BFMatcher BFmatcherPanorama(NORM_L2, true);
+
+  std::ostringstream ss;
+
+  cout << "Computing images..." << endl;
+  for (int i = 0; i < num_images; i++)
+  {
+    ptrBrisk->detect(images[i], keypoints[i]);
+    ptrBrisk->compute(images[i], keypoints[i], descriptors[i]);
+
+    descriptors[i].convertTo(descriptors[i], CV_32F);
+  }
+
+  cout << "Getting matches..." << endl;
+  for (int i = 0; i < num_images - 1; i++)
+  {
+    BFmatcherPanorama.match(descriptors[i], descriptors[i+1], BFMatches[i]);
+  }
+
+  cout << "Initializing output..." << endl;
+  Mat output = Mat::zeros(3*images[0].rows, 4 * images[0].cols, CV_32FC3);
+
+  int offset_x = 600;
+  int offset_y = 200;
+
+  vector<Point2f> pointsOrigin;
+  vector<Point2f> pointsDestination;
+
+  pointsOrigin.push_back(Point2f(0, 0));
+	pointsOrigin.push_back(Point2f(images[num_images/2].cols, 0));
+	pointsOrigin.push_back(Point2f(0, images[num_images/2].rows));
+	pointsOrigin.push_back(Point2f(images[num_images/2].cols, images[num_images/2].rows));
+	pointsDestination.push_back(Point2f(offset_x, offset_y));
+	pointsDestination.push_back(Point2f(offset_x+images[num_images/2].cols, offset_y));
+	pointsDestination.push_back(Point2f(offset_x, images[num_images/2].rows+offset_y));
+	pointsDestination.push_back(Point2f(images[num_images/2].cols+offset_x, images[num_images/2].rows+offset_y));
+
+	//hom_zero = getHomography(p1, p2);
+	first_homography = findHomography(pointsOrigin, pointsDestination);
+
+	first_homography.convertTo(first_homography, CV_32FC1);
+  final_homography = first_homography.clone();
+
+  warpPerspective(images[num_images/2], output, first_homography, Size(output.cols, output.rows), INTER_LINEAR, BORDER_CONSTANT);
+
+  cout << "Getting output..." << endl;
+
+  for (int i = num_images/2+1; i < num_images; i++)
+  {
+    cout << "Mixing " << i << " with " << i+1 << endl;
+    pointsOrigin.clear();
+    pointsDestination.clear();
+
+    for( int j = 0; j < BFMatches[i-1].size(); j++ )
+    {
+     // Get the keypoints from the matches
+     pointsOrigin.push_back( keypoints[i-1][ BFMatches[i-1][j].queryIdx ].pt );
+     pointsDestination.push_back( keypoints[i][ BFMatches[i-1][j].trainIdx ].pt );
+    }
+    actual_homography = findHomography(pointsDestination, pointsOrigin, CV_RANSAC);
+    actual_homography.convertTo(actual_homography, CV_32F);
+
+    final_homography = final_homography * actual_homography;
+
+    warpPerspective(images[i], output, final_homography, Size(output.cols, output.rows), INTER_LINEAR, BORDER_TRANSPARENT);
+  }
+
+  final_homography = first_homography.clone();
+
+  for (int i = num_images/2 - 1; i >= 0; i--)
+  {
+    cout << "Mixing " << i+1 << " with " << i << endl;
+    pointsOrigin.clear();
+    pointsDestination.clear();
+
+    for( int j = 0; j < BFMatches[i].size(); j++ )
+    {
+     // Get the keypoints from the matches
+     pointsOrigin.push_back( keypoints[i][ BFMatches[i][j].queryIdx ].pt );
+     pointsDestination.push_back( keypoints[i+1][ BFMatches[i][j].trainIdx ].pt );
+    }
+    actual_homography = findHomography(pointsOrigin, pointsDestination, CV_RANSAC);
+    actual_homography.convertTo(actual_homography, CV_32F);
+
+    final_homography = final_homography * actual_homography;
+
+    warpPerspective(images[i], output, final_homography, Size(output.cols, output.rows), INTER_LINEAR, BORDER_TRANSPARENT);
+  }
+
+  return output;
+}
+
 
 int main(int argc, char const *argv[]) {
 
@@ -230,149 +336,42 @@ int main(int argc, char const *argv[]) {
   Mat another_yosemite = imread("imagenes/yosemite1.jpg");
   Mat another_yosemite_2 = imread("imagenes/yosemite2.jpg");
 
-  vector<Point2f> pointsOrigin, pointsDestination;
+  vector<Mat> yosemites;
+  yosemites.push_back(another_yosemite);
+  yosemites.push_back(another_yosemite_2);
 
-  Mat new_output = Mat::zeros(500,1000,CV_32FC3);
-  warpPerspective(another_yosemite, new_output, Mat::eye(3, 3, CV_32F), Size(new_output.cols, new_output.rows),INTER_LINEAR,BORDER_CONSTANT);
-
-  pointsOrigin.clear();
-  pointsDestination.clear();
-
-  for( int i = 0; i < BFmatchesBRISK.size(); i++ )
- {
-   // Get the keypoints from the matches
-   pointsOrigin.push_back( keypointsA[0][ BFmatchesBRISK[i].queryIdx ].pt );
-   pointsDestination.push_back( keypointsA[1][ BFmatchesBRISK[i].trainIdx ].pt );
- }
-
-  Mat homography_1 = findHomography(pointsDestination, pointsOrigin, CV_RANSAC);
-  homography_1.convertTo(homography_1, CV_32F);
-
-
-  warpPerspective(another_yosemite_2, new_output,  homography_1, Size(new_output.cols, new_output.rows),INTER_LINEAR,BORDER_TRANSPARENT);
-
-  new_output.convertTo(new_output, CV_8U);
-
-
+  Mat yosemite_panorama = makePanorama(yosemites);
   imshow("Yosemite1", another_yosemite);
   imshow("Yosemite2", another_yosemite_2);
-  imshow("RANSAC output", new_output);
+  imshow("Yosemite panorama", yosemite_panorama);
   waitKey(0);
   destroyAllWindows();
+
   // ------------------------------------------------------------------------------------
   /* Excersice 5 */
 
-  const int YOSEMITE_IMAGES = 10;
-  Mat yosemite[YOSEMITE_IMAGES];
-  vector<KeyPoint> keypointsYosemite[YOSEMITE_IMAGES];
-  Mat descriptorsYosemite[YOSEMITE_IMAGES];
-  vector<DMatch> BFMatchesYosemite[YOSEMITE_IMAGES-1];
-  Mat actual_homography, first_homography, final_homography;
+  vector<Mat> images;
+  stringstream ss;
 
-  // Using previous ptrBrisk and BFmatcherBRISK
-
-  std::ostringstream ss;
-
-
-  cout << "Loading yosemite images..." << endl;
-  for (int i = 0; i < YOSEMITE_IMAGES; i++)
+  // Reading images
+  for (int i = 0; i < 10; i++)
   {
     ss << setw(3) << setfill('0') << (i+2);
-    // string filename = string("imagenes/yosemite") + std::to_string(i+1) + string(".jpg");
     string filename = string("imagenes/mosaico") + ss.str() + string(".jpg");
     cout << filename << endl;
     ss.str(string());
     ss.clear();
-    yosemite[i] = imread(filename, CV_LOAD_IMAGE_COLOR);
-    ptrBrisk->detect(yosemite[i], keypointsYosemite[i]);
-    ptrBrisk->compute(yosemite[i], keypointsYosemite[i], descriptorsYosemite[i]);
+    images.push_back(imread(filename, CV_LOAD_IMAGE_COLOR));
 
-    descriptorsYosemite[i].convertTo(descriptorsYosemite[i], CV_32F);
   }
+  // Make the panorama
+  Mat panorama = makePanorama(images);
 
-  cout << "Getting matches..." << endl;
-  for (int i = 0; i < YOSEMITE_IMAGES - 1; i++)
-  {
-    BFmatcherBRISK.match(descriptorsYosemite[i], descriptorsYosemite[i+1], BFMatchesYosemite[i]);
-  }
+  panorama.convertTo(panorama, CV_8U);
 
-  cout << "Initializing output..." << endl;
-  Mat yosemite_output = Mat::zeros((int)3*yosemite[0].rows, 7 * yosemite[0].cols, CV_32FC3);
-  cout << "HOla" << endl;
-
-  int offset_x = 600;
-  int offset_y = 200;
-
-  pointsOrigin.clear();
-  pointsDestination.clear();
-
-  pointsOrigin.push_back(Point2f(0, 0));
-	pointsOrigin.push_back(Point2f(yosemite[YOSEMITE_IMAGES/2].cols, 0));
-	pointsOrigin.push_back(Point2f(0, yosemite[YOSEMITE_IMAGES/2].rows));
-	pointsOrigin.push_back(Point2f(yosemite[YOSEMITE_IMAGES/2].cols, yosemite[YOSEMITE_IMAGES/2].rows));
-	pointsDestination.push_back(Point2f(offset_x, offset_y));
-	pointsDestination.push_back(Point2f(offset_x+yosemite[YOSEMITE_IMAGES/2].cols, offset_y));
-	pointsDestination.push_back(Point2f(offset_x, yosemite[YOSEMITE_IMAGES/2].rows+offset_y));
-	pointsDestination.push_back(Point2f(yosemite[YOSEMITE_IMAGES/2].cols+offset_x, yosemite[YOSEMITE_IMAGES/2].rows+offset_y));
-
-	//hom_zero = getHomography(p1, p2);
-	first_homography = findHomography(pointsOrigin, pointsDestination);
-
-	first_homography.convertTo(first_homography, CV_32FC1);
-  final_homography = first_homography.clone();
-  // final_homography = Mat::eye(3,3, CV_32F);
-  cout << "HOla2" << endl;
-  warpPerspective(yosemite[YOSEMITE_IMAGES/2], yosemite_output, first_homography, Size(yosemite_output.cols, yosemite_output.rows), INTER_LINEAR, BORDER_CONSTANT);
-
-  cout << "Getting output..." << endl;
-
-  for (int i = YOSEMITE_IMAGES/2+1; i < YOSEMITE_IMAGES; i++)
-  {
-    cout << "Mixing " << i << " with " << i+1 << endl;
-    pointsOrigin.clear();
-    pointsDestination.clear();
-
-    for( int j = 0; j < BFMatchesYosemite[i-1].size(); j++ )
-    {
-     // Get the keypoints from the matches
-     pointsOrigin.push_back( keypointsYosemite[i-1][ BFMatchesYosemite[i-1][j].queryIdx ].pt );
-     pointsDestination.push_back( keypointsYosemite[i][ BFMatchesYosemite[i-1][j].trainIdx ].pt );
-    }
-    actual_homography = findHomography(pointsDestination, pointsOrigin, CV_RANSAC);
-    actual_homography.convertTo(actual_homography, CV_32F);
-
-    final_homography = final_homography * actual_homography;
-
-    warpPerspective(yosemite[i], yosemite_output, final_homography, Size(yosemite_output.cols, yosemite_output.rows), INTER_LINEAR, BORDER_TRANSPARENT);
-  }
-
-  final_homography = first_homography.clone();
-
-  for (int i = YOSEMITE_IMAGES/2 - 1; i >= 0; i--)
-  {
-    cout << "Mixing " << i+1 << " with " << i << endl;
-    pointsOrigin.clear();
-    pointsDestination.clear();
-
-    for( int j = 0; j < BFMatchesYosemite[i].size(); j++ )
-    {
-     // Get the keypoints from the matches
-     pointsOrigin.push_back( keypointsYosemite[i][ BFMatchesYosemite[i][j].queryIdx ].pt );
-     pointsDestination.push_back( keypointsYosemite[i+1][ BFMatchesYosemite[i][j].trainIdx ].pt );
-    }
-    actual_homography = findHomography(pointsOrigin, pointsDestination, CV_RANSAC);
-    actual_homography.convertTo(actual_homography, CV_32F);
-
-    final_homography = final_homography * actual_homography;
-
-    warpPerspective(yosemite[i], yosemite_output, final_homography, Size(yosemite_output.cols, yosemite_output.rows), INTER_LINEAR, BORDER_TRANSPARENT);
-  }
-
-  yosemite_output.convertTo(yosemite_output, CV_8U);
-
-  namedWindow("Yosemite Panorama", WINDOW_NORMAL);
-  // resizeWindow("Yosemite Panorama", 768, 1366);
-  imshow("Yosemite Panorama", yosemite_output);
+  // Show it
+  namedWindow("Panorama", WINDOW_NORMAL);
+  imshow("Panorama", panorama);
 
   waitKey(0);
   destroyAllWindows();
