@@ -547,6 +547,7 @@ Image Image::warpPerspective(Homography hom)
 {
   Mat output;
 
+  // Using OpenCV warpPerspective with the image
   cv::warpPerspective(this->image, output, hom.getHomography(), Size(output.cols, output.rows));
 
   return Image(output, this->name + " warped");
@@ -554,6 +555,7 @@ Image Image::warpPerspective(Homography hom)
 
 void Image::drawCircle(Point p, int radius, Scalar color, int thickness)
 {
+  // Draw a circle in the image
   circle(this->image,p,radius,color,thickness);
 }
 
@@ -566,34 +568,39 @@ Image::Image(vector<Image*> & images, string name)
   vector<DMatch> BFMatches[num_input_images-1];
   Mat actual_homography, first_homography, final_homography;
 
-  // Using previous ptrBrisk and BFmatcherBRISK
+  // Using ptrBrisk and BFmatcherBRISK
   int Threshl=65;
   int Octaves=3;
   float PatternScales=1.0f;
 
+  // Declaring detector and matcher
   Ptr<BRISK> ptrBrisk = BRISK::create(Threshl,Octaves,PatternScales);
   BFMatcher BFmatcherPanorama(NORM_L2, true);
 
-  std::ostringstream ss;
-
   for (int i = 0; i < num_input_images; i++)
   {
+    // Detect keypoints and compute descriptors
     ptrBrisk->detect(images[i]->image, keypoints[i]);
     ptrBrisk->compute(images[i]->image, keypoints[i], descriptors[i]);
 
+    // Convert descriptors to CV_32F for compatibility
     descriptors[i].convertTo(descriptors[i], CV_32F);
   }
 
   for (int i = 0; i < num_input_images - 1; i++)
   {
+    // Matching!
     BFmatcherPanorama.match(descriptors[i], descriptors[i+1], BFMatches[i]);
   }
 
-  Mat output = Mat::zeros(3*images[0]->image.rows, 4 * images[0]->image.cols, CV_32FC3);
+  // Declaring a very large output Mat
+  Mat output = Mat::zeros(10*images[0]->image.rows, 10 * images[0]->image.cols, CV_32FC3);
 
+  // Offset of central image
   int offset_x = 600;
   int offset_y = 200;
 
+  // First homography is only a translation
   vector<Point2f> pointsOrigin;
   vector<Point2f> pointsDestination;
 
@@ -606,15 +613,15 @@ Image::Image(vector<Image*> & images, string name)
 	pointsDestination.push_back(Point2f(offset_x, images[num_input_images/2]->image.rows+offset_y));
 	pointsDestination.push_back(Point2f(images[num_input_images/2]->image.cols+offset_x, images[num_input_images/2]->image.rows+offset_y));
 
-	//hom_zero = getHomography(p1, p2);
 	first_homography = findHomography(pointsOrigin, pointsDestination);
 
 	first_homography.convertTo(first_homography, CV_32FC1);
   final_homography = first_homography.clone();
 
+  // Set central image in the canvas
   cv::warpPerspective(images[num_input_images/2]->image, output, first_homography, Size(output.cols, output.rows), INTER_LINEAR, BORDER_CONSTANT);
 
-
+  // Setting right images in the canvas with the appropiate homography
   for (int i = num_input_images/2+1; i < num_input_images; i++)
   {
     pointsOrigin.clear();
@@ -634,8 +641,10 @@ Image::Image(vector<Image*> & images, string name)
     cv::warpPerspective(images[i]->image, output, final_homography, Size(output.cols, output.rows), INTER_LINEAR, BORDER_TRANSPARENT);
   }
 
+  // Recover first homography
   final_homography = first_homography.clone();
 
+  // Setting left images in the canvas with the appropiate homography
   for (int i = num_input_images/2 - 1; i >= 0; i--)
   {
     pointsOrigin.clear();
@@ -655,9 +664,16 @@ Image::Image(vector<Image*> & images, string name)
     cv::warpPerspective(images[i]->image, output, final_homography, Size(output.cols, output.rows), INTER_LINEAR, BORDER_TRANSPARENT);
   }
 
+  // Apply Canny filter to get real points (no background)
+  Mat edges;
+  Canny(output, edges, 0, 255);
+
+  // Get the minimal Rect with real points
+  Rect roi = boundingRect( edges );
+
   // Build the object
   num_images++;
-  this->image = output.clone();
+  this->image = output(roi).clone();
   this->ID = num_images;
   this->name = "Panonama " + name;
 }
