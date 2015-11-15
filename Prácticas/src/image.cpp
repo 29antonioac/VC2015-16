@@ -1,10 +1,13 @@
 #include "../inc/image.hpp"
 
 #include <opencv2/imgproc.hpp>
+#include <opencv2/features2d/features2d.hpp>
+#include <opencv2/calib3d/calib3d.hpp>
 
 #include <iostream>
 using std::cout;
 using std::endl;
+using namespace cv;
 
 int Image::num_images = 0;
 const int Image::DISPLAY_WIDTH = 1366, Image::DISPLAY_HEIGHT = 768;
@@ -552,4 +555,109 @@ Image Image::warpPerspective(Homography hom)
 void Image::drawCircle(Point p, int radius, Scalar color, int thickness)
 {
   circle(this->image,p,radius,color,thickness);
+}
+
+Image::Image(vector<Image*> & images, string name)
+{
+
+  const int num_input_images = images.size();
+  vector<KeyPoint> keypoints[num_input_images];
+  Mat descriptors[num_input_images];
+  vector<DMatch> BFMatches[num_input_images-1];
+  Mat actual_homography, first_homography, final_homography;
+
+  // Using previous ptrBrisk and BFmatcherBRISK
+  int Threshl=65;
+  int Octaves=3;
+  float PatternScales=1.0f;
+
+  Ptr<BRISK> ptrBrisk = BRISK::create(Threshl,Octaves,PatternScales);
+  BFMatcher BFmatcherPanorama(NORM_L2, true);
+
+  std::ostringstream ss;
+
+  for (int i = 0; i < num_input_images; i++)
+  {
+    ptrBrisk->detect(images[i]->image, keypoints[i]);
+    ptrBrisk->compute(images[i]->image, keypoints[i], descriptors[i]);
+
+    descriptors[i].convertTo(descriptors[i], CV_32F);
+  }
+
+  for (int i = 0; i < num_input_images - 1; i++)
+  {
+    BFmatcherPanorama.match(descriptors[i], descriptors[i+1], BFMatches[i]);
+  }
+
+  Mat output = Mat::zeros(3*images[0]->image.rows, 4 * images[0]->image.cols, CV_32FC3);
+
+  int offset_x = 600;
+  int offset_y = 200;
+
+  vector<Point2f> pointsOrigin;
+  vector<Point2f> pointsDestination;
+
+  pointsOrigin.push_back(Point2f(0, 0));
+	pointsOrigin.push_back(Point2f(images[num_input_images/2]->image.cols, 0));
+	pointsOrigin.push_back(Point2f(0, images[num_input_images/2]->image.rows));
+	pointsOrigin.push_back(Point2f(images[num_input_images/2]->image.cols, images[num_input_images/2]->image.rows));
+	pointsDestination.push_back(Point2f(offset_x, offset_y));
+	pointsDestination.push_back(Point2f(offset_x+images[num_input_images/2]->image.cols, offset_y));
+	pointsDestination.push_back(Point2f(offset_x, images[num_input_images/2]->image.rows+offset_y));
+	pointsDestination.push_back(Point2f(images[num_input_images/2]->image.cols+offset_x, images[num_input_images/2]->image.rows+offset_y));
+
+	//hom_zero = getHomography(p1, p2);
+	first_homography = findHomography(pointsOrigin, pointsDestination);
+
+	first_homography.convertTo(first_homography, CV_32FC1);
+  final_homography = first_homography.clone();
+
+  cv::warpPerspective(images[num_input_images/2]->image, output, first_homography, Size(output.cols, output.rows), INTER_LINEAR, BORDER_CONSTANT);
+
+
+  for (int i = num_input_images/2+1; i < num_input_images; i++)
+  {
+    pointsOrigin.clear();
+    pointsDestination.clear();
+
+    for( int j = 0; j < BFMatches[i-1].size(); j++ )
+    {
+     // Get the keypoints from the matches
+     pointsOrigin.push_back( keypoints[i-1][ BFMatches[i-1][j].queryIdx ].pt );
+     pointsDestination.push_back( keypoints[i][ BFMatches[i-1][j].trainIdx ].pt );
+    }
+    actual_homography = findHomography(pointsDestination, pointsOrigin, CV_RANSAC);
+    actual_homography.convertTo(actual_homography, CV_32F);
+
+    final_homography = final_homography * actual_homography;
+
+    cv::warpPerspective(images[i]->image, output, final_homography, Size(output.cols, output.rows), INTER_LINEAR, BORDER_TRANSPARENT);
+  }
+
+  final_homography = first_homography.clone();
+
+  for (int i = num_input_images/2 - 1; i >= 0; i--)
+  {
+    pointsOrigin.clear();
+    pointsDestination.clear();
+
+    for( int j = 0; j < BFMatches[i].size(); j++ )
+    {
+     // Get the keypoints from the matches
+     pointsOrigin.push_back( keypoints[i][ BFMatches[i][j].queryIdx ].pt );
+     pointsDestination.push_back( keypoints[i+1][ BFMatches[i][j].trainIdx ].pt );
+    }
+    actual_homography = findHomography(pointsOrigin, pointsDestination, CV_RANSAC);
+    actual_homography.convertTo(actual_homography, CV_32F);
+
+    final_homography = final_homography * actual_homography;
+
+    cv::warpPerspective(images[i]->image, output, final_homography, Size(output.cols, output.rows), INTER_LINEAR, BORDER_TRANSPARENT);
+  }
+
+  // Build the object
+  num_images++;
+  this->image = output.clone();
+  this->ID = num_images;
+  this->name = "Panonama " + name;
 }

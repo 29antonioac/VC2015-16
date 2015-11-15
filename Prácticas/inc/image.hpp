@@ -34,6 +34,7 @@ public:
   Image(const Mat& input, string name = "Mat");
   Image(const Image& img);
   Image(const vector<Image*> & sequence, unsigned int rows, unsigned int cols);
+  Image(vector<Image*> & images, string name);
 
   void paint();
   void getPixel(int x, int y);
@@ -57,6 +58,8 @@ public:
 
   Image warpPerspective(Homography hom);
   void drawCircle(Point p, int radius, Scalar color, int thickness = 1);
+
+  // Image makePanorama(vector<Image*> & images, string name);
 
 
 
