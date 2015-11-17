@@ -31,6 +31,7 @@
 \usepackage[all]{xy} %Para diagramas
 \usepackage{enumerate} %Personalización de enumeraciones
 \usepackage{tikz} %Dibujos
+\usepackage{ wasysym } % Para la sonrisa
 
 %Tipografía escalable
 \usepackage{lmodern}
@@ -51,6 +52,8 @@
 \definecolor{gray}{gray}{0.45}
 \definecolor{lightgray}{gray}{.95}
 \definecolor{mediumgray}{gray}{.8}
+
+\setlength{\parskip}{.5em} % por defecto el espacio entre párrafos es 0pt
 
 
 
@@ -341,7 +344,7 @@
   \end{cuestion}
 
   \begin{solucion}
-    cosas
+    iii
   \end{solucion}
 
   \begin{cuestion}
@@ -353,7 +356,37 @@
   \end{cuestion}
 
   \begin{solucion}
-      lo tengo en papel
+      Sean $x=(a,b)$ e $y=(c,d)$ dos puntos del plano afín. En el plano proyectivo,
+      con coordenadas homogéneas, equivalen a, permitiendo la licencia de los nombres,
+      $x=(a,b,1)$ e $y=(c,d,1)$. Veamos su producto vectorial.
+
+      \[
+      \left(
+      \begin{array}{ccc}
+          i & j & k \\
+          a & b & 1 \\
+          c & d & 1 \\
+      \end{array}
+      \right) = i(b-d) + j(c-a) + k(ad-bc) = (b-d,c-a,ad-bc) = (\frac{b-d}{ad-bc},\frac{c-a}{ad-bc},1) = l
+      \] \\
+
+      Ahora comprobemos si dicha recta (dada por ese vector) contiene dichos puntos, es decir,
+
+      \[
+        l^T (x \times y) = 0 \Leftrightarrow \left(\begin{array}{ccc}
+                                                  \frac{b-d}{ad-bc} \\
+                                                  \frac{c-a}{ad-bc} \\
+                                                  1 \\
+                                                \end{array}\right) \cdot (a,b,1) = 0
+      \]
+
+      \[
+        \frac{ab -bd}{ad-bc} + \frac{bc-ab}{ad-bc} + 1 = 0 \Leftrightarrow \frac{bc-ad}{ad-bc} + 1 = 0 \Leftrightarrow -1 + 1 = 0
+      \]
+
+      $$ \smiley$$
+
+
   \end{solucion}
 
   \begin{cuestion}
@@ -379,6 +412,8 @@
       Trasponemos ambos lados de la ecuación (la traspuesta invierte el orden del producto)
       $$H^T l' = l$$
       Ahora multiplicamos por la inversa de $H^T$ por la izquierda en ambos miembros
+      (podemos hacerlo, ya que al ser una matriz homografía es invertible, ver cuestión
+      6)
       $$l' = (H^T)^{-1} l$$
       Por tanto nuestra conclusión es
       $$G = (H^T)^{-1}$$
@@ -440,8 +475,8 @@
 
   \begin{solucion}
     Para una homografía en general, lo único que queda invariante serán las líneas
-    rectas, que seguirán siendo rectas. Si particularizamos, con una transformación
-    afín conservamos también el paralelismo y las proporciones. Y si ahondamos aún más, con
+    rectas, que seguirán siendo rectas (3 puntos alineados seguirán estándolo tras la transformación).
+    Si particularizamos, con una transformación afín conservamos también el paralelismo y las proporciones. Y si ahondamos aún más, con
     una aplicación lineal conservamos lo anterior y además llevan el origen en el origen
     (no hay traslaciones).
   \end{solucion}
@@ -454,7 +489,8 @@
   \begin{solucion}
     La proyección, ya que lo único que conserva son las líneas rectas. Esta deformación
     produce, entre otras cosas, que las líneas paralelas ya no lo sean, produciendo
-    deformaciones difíciles de reconstruir (aunque ya bastante estudiadas).
+    deformaciones difíciles de reconstruir (aunque ya bastante estudiadas, ya que tienen muchos
+    grados de libertad).
   \end{solucion}
 
 
@@ -466,8 +502,9 @@
 
   \begin{solucion}
      	Este detector utiliza la invarianza horizontal y vertical de la intensidad
-      luminosa de los píxeles. Por tanto, lo que está detectando son patrones
-      fotométricos.
+      luminosa de los píxeles en busca de esquinas. Por tanto, lo que está detectando son patrones
+      geométricos. Se basa en los valores propios de la matriz de error $SSD$ en busca
+      de cambios bruscos de intensidad.
   \end{solucion}
   \begin{cuestion}
     ¿Sería adecuado usar como descriptor de un punto Harris los valores de
@@ -476,7 +513,8 @@
   \end{cuestion}
 
   \begin{solucion}
-     	cosas
+     	Generalmente no, ya que sería muy sensible frente a cualquier homografía
+      que no sea una traslación.
   \end{solucion}
   \begin{cuestion}
     ¿Qué información de la imagen se codifica en el descriptor de SIFT?
@@ -485,7 +523,8 @@
 
   \begin{solucion}
      	En el descriptor de SIFT se almacena un histograma de la orientación de los
-      gradientes de cada píxel de una zona de la imagen con información característica.
+      gradientes de cada píxel de una zona detectada. El histograma está formado
+      por 8 direcciones del gradiente.
   \end{solucion}
 
   \begin{cuestion}
@@ -510,6 +549,10 @@
       no es suficiente para conseguir una buena homografía (que es lo que buscamos con
       dicha regresión). Esto lo consigue trazando líneas aleatorias entre las muestras
       y tomar la que mejor nos convenga según un criterio de satisfacibilidad de las muestras.
+
+      En Visión por Computador se usa al estimar una homografía entre dos conjuntos
+      de puntos. Así se desechan las correspondencias \textit{peores} entre ambos conjuntos y se consigue
+      estimar una buena homografía.
   \end{solucion}
   \begin{cuestion}
     ¿Si tengo 4 imágenes de una escena de manera que se solapan la 1-2, 2-3
