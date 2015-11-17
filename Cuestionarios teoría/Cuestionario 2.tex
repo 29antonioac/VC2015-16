@@ -435,18 +435,181 @@
 
   \begin{cuestion}
     Identificar los movimientos elementales (traslación, giro, escala,
-    cizalla, proyectivo) representados por las homografías $H1$, $H2$, $H3$ y $H4$:
+    cizalla, proyectivo) representados por las homografías $H_1$, $H_2$, $H_3$ y $H_4$:
+
+    \[
+    H_1 =
+    \left(
+    \begin{array}{ccc}
+        1 & 0 & 3 \\
+        0 & 1 & 5 \\
+        0 & 0 & 1 \\
+    \end{array}
+    \right)
+    \left(
+    \begin{array}{ccc}
+        0.5 & 0 & 0 \\
+        0 & 0.3 & 0 \\
+        0 & 0 & 1 \\
+    \end{array}
+    \right)
+    \left(
+    \begin{array}{ccc}
+        1 & 3 & 0 \\
+        0 & 1 & 0 \\
+        0 & 0 & 1 \\
+    \end{array}
+    \right)
+    \]
+
+    \[
+    H_2 =
+    \left(
+    \begin{array}{ccc}
+        0 & 1 & -3 \\
+        -1 & 0 & 2 \\
+        0 & 0 & 1 \\
+    \end{array}
+    \right)
+    \left(
+    \begin{array}{ccc}
+        2 & 0 & 0 \\
+        2 & 2 & 0 \\
+        0 & 0 & 1 \\
+    \end{array}
+    \right)
+    \]
+
+    \[
+    H_3 =
+    \left(
+    \begin{array}{ccc}
+        1 & 0.5 & 0 \\
+        0.5 & 2 & 0 \\
+        0 & 0 & 1 \\
+    \end{array}
+    \right)
+    \left(
+    \begin{array}{ccc}
+        1 & 0 & 0 \\
+        0 & 1 & 0 \\
+        -1 & 0 & 1 \\
+    \end{array}
+    \right)
+    \]
+
+    \[
+    H_4 =
+    \left(
+    \begin{array}{ccc}
+        2 & 0 & 3 \\
+        0 & 2 & -1 \\
+        0 & 1 & 2 \\
+    \end{array}
+    \right)
+    \] \\
 
   \end{cuestion}
 
   \begin{solucion}
-    En papel
+    Vamos a descomponer cada homografía en transformaciones conocidas. Si no digo
+    lo contrario, la descomposición se hace con esta heurística: cojo 2 matrices de
+    transformación (eligiendo las que parezcan más probables), las multiplico e intento
+    ajustar contantes.
       \begin{itemize}
-        \item $H_1$
+        \item $H_1$:
           Es claro que se trata de Traslación * Escala * Cizalla
-        \item $H_2$
-          Descomponemos ambas matrices (insertar) y nos queda Rotación(-90º) * Traslación * Escala * Cizalla
-        \item $H_3$
+        \item $H_2$:
+          Descomponiendo ambas matrices queda Rotación * Traslación * Escala * Cizalla
+
+          \[
+          H_2 = \underbrace{
+          \left(
+          \begin{array}{ccc}
+              0 & 1 & -3 \\
+              -1 & 0 & 2 \\
+              0 & 0 & 1 \\
+          \end{array}
+          \right)}_{A}
+          \underbrace{
+          \left(
+          \begin{array}{ccc}
+              2 & 0 & 0 \\
+              2 & 2 & 0 \\
+              0 & 0 & 1 \\
+          \end{array}
+          \right)}_{B} = \underbrace {\left(
+                    \begin{array}{ccc}
+                        0 & 1 & 0 \\
+                        -1 & 0 & 0 \\
+                        0 & 0 & 1 \\
+                    \end{array}
+                    \right)
+                    \left(
+                    \begin{array}{ccc}
+                        1 & 0 & -2 \\
+                        0 & 1 & -3 \\
+                        0 & 0 & 1 \\
+                    \end{array}
+                    \right)}_{A}
+                    \underbrace{
+                    \left(
+                    \begin{array}{ccc}
+                        2 & 0 & 0 \\
+                        0 & 2 & 0 \\
+                        0 & 0 & 1 \\
+                    \end{array}
+                    \right)
+                    \left(
+                    \begin{array}{ccc}
+                        1 & 0 & 0 \\
+                        1 & 1 & 0 \\
+                        0 & 0 & 1 \\
+                    \end{array}
+                    \right)}_{B}
+          \]
+
+        \item $H_3$:
+          Descomponiendo queda Escala * Cizalla * Proyección
+          \[
+          H_3 = \underbrace{
+          \left(
+          \begin{array}{ccc}
+              1 & 0.5 & 0 \\
+              0.5 & 2 & 0 \\
+              0 & 0 & 1 \\
+          \end{array}
+          \right)}_{A}
+          \underbrace{
+          \left(
+          \begin{array}{ccc}
+              1 & 0 & 0 \\
+              0 & 1 & 0 \\
+              -1 & 0 & 1 \\
+          \end{array}
+          \right)}_{B} = \underbrace{\left(
+                    \begin{array}{ccc}
+                        1 & 0 & 0 \\
+                        0 & 2 & 0 \\
+                        0 & 0 & 1 \\
+                    \end{array}
+                    \right)
+                    \left(
+                    \begin{array}{ccc}
+                        1 & 0.5 & 0 \\
+                        0.25 & 1 & 0 \\
+                        0 & 0 & 1 \\
+                    \end{array}
+                    \right)}_{A}
+                    \underbrace{
+                    \left(
+                    \begin{array}{ccc}
+                        1 & 0 & 0 \\
+                        0 & 1 & 0 \\
+                        -1 & 0 & 1 \\
+                    \end{array}
+                    \right)}_{B}
+          \]
 
         \item $H_4$:
       \end{itemize}
