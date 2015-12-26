@@ -2,6 +2,7 @@
 
 Mat Homography::homographyEquationMatrix(vector<Point> origin, vector<Point> destination)
 {
+  // Check input size
   if (origin.size() != destination.size())
   {
     return Mat::zeros(3,3,CV_32FC1);
@@ -10,10 +11,12 @@ Mat Homography::homographyEquationMatrix(vector<Point> origin, vector<Point> des
   int num_points = origin.size();
   int num_equations = 2 * num_points;
 
+  // Fill new matrix with zeros
   Mat coeffs = Mat::zeros(num_equations, 9, CV_32FC1);
 
   Point ori, dest;
 
+  // Set coeffs of the equation matrix as slides
   for (int i = 0; i < num_points; i++)
   {
     ori = origin[i];
@@ -42,15 +45,21 @@ Mat Homography::homographyEquationMatrix(vector<Point> origin, vector<Point> des
 
 Mat Homography::calcHomography(vector<Point> origin, vector<Point> destination)
 {
+  // Compute matrix with equation coefficients
   Mat A = homographyEquationMatrix(origin,destination);
 
-  Mat u, vt, w;
+  // Compute SVD of A (http://docs.opencv.org/master/df/df7/classcv_1_1SVD.html#a76f0b2044df458160292045a3d3714c6)
+  Mat w, u, vt;
 	SVD::compute(A, w, u, vt);
 
+  // Take last col of vt matrix and reorder as 3x3 matrix
   Mat homography_matrix = Mat(3, 3, CV_32FC1);
-	for (int i = 0; i < 9; i++)
+	for (int i = 0; i < 3; i++)
   {
-		homography_matrix.at<float>(Point(i % 3, floor(i / 3))) = vt.at<float>(Point(i,vt.cols -1 ));
+    for (int j = 0; j < 3; j++)
+    {
+		  homography_matrix.at<float>(Point(j, i)) = vt.at<float>(Point(3*i + j, vt.cols -1 ));
+    }
 	}
 
   return homography_matrix;

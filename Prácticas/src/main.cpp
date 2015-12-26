@@ -163,8 +163,18 @@ int main(int argc, char const *argv[]) {
     circle(im_2_copy,keypointsB[1][i].pt, circle_radius, Scalar(0,0,255), circle_thickness);
   }
 
-  imshow("Brisk", im);
+  namedWindow("Brisk1", WINDOW_NORMAL);
+  namedWindow("Brisk2", WINDOW_NORMAL);
+
+  imshow("Brisk1", im);
   imshow("Brisk2", im_2);
+
+  waitKey(0);
+  destroyAllWindows();
+
+  namedWindow("ORB1", WINDOW_NORMAL);
+  namedWindow("ORB2", WINDOW_NORMAL);
+
   imshow("ORB1",im_copy);
   imshow("ORB2",im_2_copy);
   waitKey(0);
@@ -172,29 +182,19 @@ int main(int argc, char const *argv[]) {
 
   /* Excersice 3 */
 
-  // Neccesary for FlannBasedMatcher!
-  for (int i = 0; i < 2; i++)
-  {
-    if (descriptorsA[i].type() != CV_32F)
-      descriptorsA[i].convertTo(descriptorsA[i], CV_32F);
-  }
-
-  for (int i = 0; i < 2; i++)
-  {
-    if (descriptorsB[i].type() != CV_32F)
-      descriptorsB[i].convertTo(descriptorsB[i], CV_32F);
-  }
-  // -------------------------------
-
   /* BFMatcher */
-  BFMatcher BFmatcherBRISK(NORM_L2, true);
-  BFMatcher BFmatcherORB(NORM_L2, true);
+  BFMatcher BFmatcherBRISK(NORM_HAMMING, true);
+  BFMatcher BFmatcherORB(NORM_HAMMING, true);
 
   vector<DMatch> BFmatchesBRISK, BFmatchesORB;
+
+  cout << "MATCH" << endl;
 
   // Match!
   BFmatcherBRISK.match(descriptorsA[0], descriptorsA[1], BFmatchesBRISK);
   BFmatcherORB.match(descriptorsB[0], descriptorsB[1], BFmatchesORB);
+
+  cout << "MATCHEDD" << endl;
 
 
   // Draw matches
@@ -221,6 +221,17 @@ int main(int argc, char const *argv[]) {
   FlannBasedMatcher FlmatcherORB;
 
   vector<DMatch> FlmatchesBRISK, FlmatchesORB;
+
+  // Neccesary for FlannBasedMatcher!
+  for (int i = 0; i < 2; i++)
+  {
+    descriptorsA[i].convertTo(descriptorsA[i], CV_32F);
+  }
+
+  for (int i = 0; i < 2; i++)
+  {
+    descriptorsB[i].convertTo(descriptorsB[i], CV_32F);
+  }
 
   FlmatcherBRISK.match(descriptorsA[0], descriptorsA[1], FlmatchesBRISK);
 

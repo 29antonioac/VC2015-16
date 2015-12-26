@@ -559,6 +559,7 @@ void Image::drawCircle(Point p, int radius, Scalar color, int thickness)
   circle(this->image,p,radius,color,thickness);
 }
 
+// Constructor for making panoramas
 Image::Image(vector<Image*> & images, string name)
 {
 
@@ -575,16 +576,13 @@ Image::Image(vector<Image*> & images, string name)
 
   // Declaring detector and matcher
   Ptr<BRISK> ptrBrisk = BRISK::create(Threshl,Octaves,PatternScales);
-  BFMatcher BFmatcherPanorama(NORM_L2, true);
+  BFMatcher BFmatcherPanorama(NORM_HAMMING, true);
 
   for (int i = 0; i < num_input_images; i++)
   {
     // Detect keypoints and compute descriptors
     ptrBrisk->detect(images[i]->image, keypoints[i]);
     ptrBrisk->compute(images[i]->image, keypoints[i], descriptors[i]);
-
-    // Convert descriptors to CV_32F for compatibility
-    descriptors[i].convertTo(descriptors[i], CV_32F);
   }
 
   for (int i = 0; i < num_input_images - 1; i++)
@@ -604,25 +602,32 @@ Image::Image(vector<Image*> & images, string name)
   vector<Point2f> pointsOrigin;
   vector<Point2f> pointsDestination;
 
+  // Central image (there's no problem if num_imput_images is odd)
+  int central_image = num_input_images / 2;
+
   pointsOrigin.push_back(Point2f(0, 0));
-	pointsOrigin.push_back(Point2f(images[num_input_images/2]->image.cols, 0));
-	pointsOrigin.push_back(Point2f(0, images[num_input_images/2]->image.rows));
-	pointsOrigin.push_back(Point2f(images[num_input_images/2]->image.cols, images[num_input_images/2]->image.rows));
+	pointsOrigin.push_back(Point2f(images[central_image]->image.cols, 0));
+	pointsOrigin.push_back(Point2f(0, images[central_image]->image.rows));
+	pointsOrigin.push_back(Point2f(images[central_image]->image.cols, images[central_image]->image.rows));
 	pointsDestination.push_back(Point2f(offset_x, offset_y));
-	pointsDestination.push_back(Point2f(offset_x+images[num_input_images/2]->image.cols, offset_y));
-	pointsDestination.push_back(Point2f(offset_x, images[num_input_images/2]->image.rows+offset_y));
-	pointsDestination.push_back(Point2f(images[num_input_images/2]->image.cols+offset_x, images[num_input_images/2]->image.rows+offset_y));
+	pointsDestination.push_back(Point2f(offset_x + images[central_image]->image.cols, offset_y));
+	pointsDestination.push_back(Point2f(offset_x, images[central_image]->image.rows + offset_y));
+	pointsDestination.push_back(Point2f(images[central_image]->image.cols + offset_x, images[central_image]->image.rows + offset_y));
 
 	first_homography = findHomography(pointsOrigin, pointsDestination);
 
+  // Convert to float for compatibility
 	first_homography.convertTo(first_homography, CV_32FC1);
+
+  // Clone the first homography matrix
   final_homography = first_homography.clone();
 
   // Set central image in the canvas
-  cv::warpPerspective(images[num_input_images/2]->image, output, first_homography, Size(output.cols, output.rows), INTER_LINEAR, BORDER_CONSTANT);
+  // Set BORDER_CONSTANT to prevent artifacts on the canvas (only in the first image)
+  cv::warpPerspective(images[central_image]->image, output, first_homography, Size(output.cols, output.rows), INTER_LINEAR, BORDER_CONSTANT);
 
   // Setting right images in the canvas with the appropiate homography
-  for (int i = num_input_images/2+1; i < num_input_images; i++)
+  for (int i = central_image+1; i < num_input_images; i++)
   {
     pointsOrigin.clear();
     pointsDestination.clear();
@@ -633,9 +638,11 @@ Image::Image(vector<Image*> & images, string name)
      pointsOrigin.push_back( keypoints[i-1][ BFMatches[i-1][j].queryIdx ].pt );
      pointsDestination.push_back( keypoints[i][ BFMatches[i-1][j].trainIdx ].pt );
     }
+    // Compute homography
     actual_homography = findHomography(pointsDestination, pointsOrigin, CV_RANSAC);
     actual_homography.convertTo(actual_homography, CV_32F);
 
+    // Acumulate homography
     final_homography = final_homography * actual_homography;
 
     cv::warpPerspective(images[i]->image, output, final_homography, Size(output.cols, output.rows), INTER_LINEAR, BORDER_TRANSPARENT);
@@ -645,7 +652,7 @@ Image::Image(vector<Image*> & images, string name)
   final_homography = first_homography.clone();
 
   // Setting left images in the canvas with the appropiate homography
-  for (int i = num_input_images/2 - 1; i >= 0; i--)
+  for (int i = central_image - 1; i >= 0; i--)
   {
     pointsOrigin.clear();
     pointsDestination.clear();
@@ -656,20 +663,23 @@ Image::Image(vector<Image*> & images, string name)
      pointsOrigin.push_back( keypoints[i][ BFMatches[i][j].queryIdx ].pt );
      pointsDestination.push_back( keypoints[i+1][ BFMatches[i][j].trainIdx ].pt );
     }
+    // Compute homography
     actual_homography = findHomography(pointsOrigin, pointsDestination, CV_RANSAC);
     actual_homography.convertTo(actual_homography, CV_32F);
 
+    // Acumulate homography
     final_homography = final_homography * actual_homography;
 
     cv::warpPerspective(images[i]->image, output, final_homography, Size(output.cols, output.rows), INTER_LINEAR, BORDER_TRANSPARENT);
   }
 
-  // Apply Canny filter to get real points (no background)
-  Mat edges;
-  Canny(output, edges, 0, 255);
+  // Apply threshold to get real points (no background)
+  Mat dst;
+  Canny(output, dst, 0, 255);
+  // inRange(output, Scalar(1,1,1), Scalar(255,255,255), dst);
 
   // Get the minimal Rect with real points
-  Rect roi = boundingRect( edges );
+  Rect roi = boundingRect( dst );
 
   // Build the object
   num_images++;
