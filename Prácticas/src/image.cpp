@@ -234,12 +234,12 @@ Image::Image(string path, bool flag)
   name = SplitFilename(path);
 }
 
-Image::Image(int rows, int cols)
+Image::Image(int rows, int cols, string name)
 {
   num_images++;
   ID = num_images;
   image = Mat::zeros(rows,cols,CV_8UC3);
-  name = "zeros";
+  this->name = name;
 }
 
 Image::Image(const Mat& input, string name)

@@ -30,7 +30,7 @@ private:
   vector<Mat> MaskSecondDerivative(float sigma, char axis);
 public:
   Image(string path, bool flag);
-  Image(int rows, int cols);
+  Image(int rows, int cols, string name = "Mat");
   Image(const Mat& input, string name = "Mat");
   Image(const Image& img);
   Image(const vector<Image*> & sequence, unsigned int rows, unsigned int cols);
