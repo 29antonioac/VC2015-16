@@ -5,6 +5,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <vector>
+#include <ostream>
 
 using namespace cv;
 
@@ -15,12 +16,15 @@ private:
 
 
 public:
-  Camera();
+  Camera(float low = 0.0, float high = 1.0);
 
   bool isFinite();
-  void makeRandomFinite(float low, float high);
 
   Point2f project(Point3f input);
+
+  void print();
+
+
 
 
 
