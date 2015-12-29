@@ -24,6 +24,7 @@ public:
   bool isFinite();
 
   Point2f project(Point3f input);
+  float error(Camera other);
 
   void print();
 

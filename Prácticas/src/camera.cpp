@@ -1,4 +1,5 @@
 #include "../inc/camera.hpp"
+#include <cmath>
 #include <iostream>
 
 Camera::Camera(float low, float high)
@@ -18,7 +19,7 @@ Camera::Camera(vector< pair<Point3f, Point2f> > correspondences)
   this->camera = Mat::zeros(3, 4, CV_32FC1);
   Mat A = Mat::zeros(2 * correspondences.size(), 12, CV_32FC1);
 
-  for (int i = 0; i <= correspondences.size(); i++)
+  for (unsigned i = 0; i < correspondences.size(); i++)
   {
     A.at<float>(2 * i, 4) = -correspondences[i].first.x;
     A.at<float>(2 * i, 5) = -correspondences[i].first.y;
@@ -44,10 +45,7 @@ Camera::Camera(vector< pair<Point3f, Point2f> > correspondences)
 
   for (int i = 0; i < 3; i++)
 		for (int j = 0; j < 4; j++)
-    {
-      std::cout << "i = " << i << ", j = " << j << std::endl;
 			this->camera.at<float>(i, j) = vt.at<float>(11, i * 4 + j);
-    }
 }
 
 
@@ -71,6 +69,23 @@ Point2f Camera::project(Point3f input)
 
   return projection;
 
+}
+
+float Camera::error(Camera other)
+{
+  Mat one = this->camera / this->camera.at<float>(2,2);
+  Mat two = other.camera / other.camera.at<float>(2,2);
+
+  Mat diff = one - two;
+  float error = 0.0;
+
+  for (int i = 0; i < diff.rows; i++)
+    for (int j = 0; j < diff.cols; j++)
+      error += diff.at<float>(i,j) * diff.at<float>(i,j);
+
+  error = sqrt(error);
+
+  return error;
 }
 
 void Camera::print()
