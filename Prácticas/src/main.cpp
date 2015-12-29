@@ -7,6 +7,8 @@
 #include <vector>
 #include <ctime>
 
+using namespace std;
+
 int main(int argc, char const *argv[]) {
   theRNG().state = clock();
   vector<Point3f> worldPoints;
@@ -19,7 +21,19 @@ int main(int argc, char const *argv[]) {
     }
 
   Camera randomFinite;
+  vector < pair <Point3f, Point2f> > correspondences;
+
+  for (unsigned int i = 0; i <= worldPoints.size(); i++)
+  {
+    Point3f actualPoint = worldPoints[i];
+    correspondences.push_back(pair<Point3f, Point2f>(actualPoint,randomFinite.project(actualPoint)));
+  }
+
+  Camera estimated(correspondences);
+
   randomFinite.print();
+  cout << endl;
+  estimated.print();
 
 
   return 0;

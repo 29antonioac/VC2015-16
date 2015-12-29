@@ -8,6 +8,8 @@
 #include <ostream>
 
 using namespace cv;
+using std::vector;
+using std::pair;
 
 class Camera
 {
@@ -17,6 +19,7 @@ private:
 
 public:
   Camera(float low = 0.0, float high = 1.0);
+  Camera(vector< pair<Point3f, Point2f> > correspondences);
 
   bool isFinite();
 
