@@ -125,7 +125,7 @@ int main(int argc, char const *argv[]) {
   cout << "Error calibrando = " << error << endl;
   */
 
-  /* Excercise 3 */
+  /* Exercise 3 */
 
   int Threshl=65;
   int Octaves=3;
@@ -165,14 +165,25 @@ int main(int argc, char const *argv[]) {
 	}
 
   // Compute fundamental matrix
-  Mat F = cv::findFundamentalMat(corresp[0], corresp[1], CV_FM_RANSAC, 0.001);
+  vector<unsigned char> taken;
+  Mat F = cv::findFundamentalMat(corresp[0], corresp[1], CV_FM_RANSAC, 1, 0.99, taken);
   cout << F << endl;
+
+  vector<Point2f> right_corresp[2];
+  for (int i = 0; i < corresp[0].size(); i++)
+  {
+    if ((int)taken[i] == 1)
+    {
+      right_corresp[0].push_back(corresp[0][i]);
+      right_corresp[1].push_back(corresp[1][i]);
+    }
+  }
 
   // Compute epilines
   vector<Vec3f> epilines[2];
 
-  computeCorrespondEpilines(corresp[0], 1, F, epilines[1]);
-  computeCorrespondEpilines(corresp[1], 2, F, epilines[0]);
+  computeCorrespondEpilines(right_corresp[0], 1, F, epilines[1]);
+  computeCorrespondEpilines(right_corresp[1], 2, F, epilines[0]);
 
   double distance = 0.0;
   int epilineIndex;
@@ -186,10 +197,10 @@ int main(int argc, char const *argv[]) {
   		Point p = Point(0, -epiline[2] / epiline[1]);
   		Point q = Point(vmort[image].cols, (-epiline[2] - epiline[0] * vmort[image].cols) / epiline[1]);
 
-      distance += fabs(epiline[0] * corresp[image][epilineIndex].x + epiline[1] * corresp[image][epilineIndex].y + epiline[2]) / sqrt(epiline[0]*epiline[0] + epiline[1]*epiline[1]);
+      distance += fabs(epiline[0] * right_corresp[image][epilineIndex].x + epiline[1] * right_corresp[image][epilineIndex].y + epiline[2]) / sqrt(epiline[0]*epiline[0] + epiline[1]*epiline[1]);
 
   		line(vmort[image], p, q, color);
-  		circle(vmort[image], corresp[image][epilineIndex], 5, color);
+  		circle(vmort[image], right_corresp[image][epilineIndex], 5, color);
   	}
   }
 
@@ -203,6 +214,10 @@ int main(int argc, char const *argv[]) {
 
   waitKey();
   destroyAllWindows();
+
+  /* Exercise 4 */
+
+
 
 
   return 0;
