@@ -10,9 +10,10 @@
 using namespace std;
 using namespace cv;
 
-int main(int argc, char const *argv[]) {
-  RNG rng;
-  theRNG().state = clock();
+RNG rng;
+
+void exercise1()
+{
   vector<Point3f> worldPoints;
   vector<Point2f> projectedPoints;
   vector < pair<Point3f, Point2f> > correspondences;
@@ -57,17 +58,17 @@ int main(int argc, char const *argv[]) {
 
   waitKey(0);
   destroyAllWindows();
+}
 
-  /* Exercise 2 */
-
-/*
+void exercise2()
+{
   const int CHESS_IMAGES = 25;
   bool valid;
   vector<Point2f> corners;
   vector< vector<Point2f> > imagePoints;
   vector<Mat> images(CHESS_IMAGES);
   vector<Mat> valid_images;
-  Size patternSize(12,13);
+  Size patternSize(13,12);
 
   for (int i = 0; i < CHESS_IMAGES; i++)
   {
@@ -95,11 +96,11 @@ int main(int argc, char const *argv[]) {
   vector< vector<Point3f> > objectPoints;
   vector<Point3f> points;
   for (int i = 0; i < 12; i++) {
-		for (int j = 0; j < 13; j++) {
-			Point3f p = Point3f(j,i,0);
-			points.push_back(p);
-		}
-	}
+    for (int j = 0; j < 13; j++) {
+      Point3f p = Point3f(j,i,0);
+      points.push_back(p);
+    }
+  }
 
   for (unsigned i = 0; i < valid_images.size(); i++)
   {
@@ -107,10 +108,10 @@ int main(int argc, char const *argv[]) {
   }
 
   Mat cameraMatrix = Mat(3, 3, CV_32F);
-	Size imageSize(valid_images[0].cols, valid_images[0].rows);
-	Mat distCoeffs = Mat(8, 1, CV_32F);
-	vector< Mat > rotationVectors;
-	vector< Mat > translationVectors;
+  Size imageSize(valid_images[0].cols, valid_images[0].rows);
+  Mat distCoeffs = Mat(8, 1, CV_32F);
+  vector< Mat > rotationVectors;
+  vector< Mat > translationVectors;
 
   bool distorsion = false;
 
@@ -120,17 +121,14 @@ int main(int argc, char const *argv[]) {
   else
     flags = CV_CALIB_ZERO_TANGENT_DIST;
 
-	double error = calibrateCamera(objectPoints, imagePoints, imageSize, cameraMatrix, distCoeffs, rotationVectors, translationVectors, flags);
+  double error = calibrateCamera(objectPoints, imagePoints, imageSize, cameraMatrix, distCoeffs, rotationVectors, translationVectors, flags);
 
+  cout << "CameraMatrix = " << cameraMatrix << endl;
   cout << "Error calibrando = " << error << endl;
-  */
+}
 
-  /* Exercise 3 */
-
-  int Threshl=65;
-  int Octaves=3;
-  float PatternScales=1.0f;
-
+void exercise3()
+{
   vector<Mat> vmort;
   vector<KeyPoint> keypoints[2];
   Mat descriptors[2];
@@ -141,7 +139,7 @@ int main(int argc, char const *argv[]) {
   }
 
   // Detect and compute descriptors
-  Ptr<BRISK> ptrBrisk = BRISK::create(Threshl,Octaves,PatternScales);
+  Ptr<BRISK> ptrBrisk = BRISK::create(65);
 
   ptrBrisk->detect(vmort[0], keypoints[0]);
   ptrBrisk->compute(vmort[0], keypoints[0],descriptors[0]);
@@ -160,9 +158,9 @@ int main(int argc, char const *argv[]) {
   // Get correspondence points
   for (int i = 0; i < matches.size(); i++)
   {
-		corresp[0].push_back(keypoints[0][ matches[i].queryIdx ].pt);
-		corresp[1].push_back(keypoints[1][ matches[i].trainIdx ].pt);
-	}
+    corresp[0].push_back(keypoints[0][ matches[i].queryIdx ].pt);
+    corresp[1].push_back(keypoints[1][ matches[i].trainIdx ].pt);
+  }
 
   // Compute fundamental matrix
   vector<unsigned char> taken;
@@ -193,15 +191,15 @@ int main(int argc, char const *argv[]) {
     Scalar color = Scalar(rng.uniform(0,255), rng.uniform(0, 255), rng.uniform(0, 255));
     for (int image = 0; image < 2; image++)
     {
-  		Vec3f epiline = epilines[image].at(epilineIndex);
-  		Point p = Point(0, -epiline[2] / epiline[1]);
-  		Point q = Point(vmort[image].cols, (-epiline[2] - epiline[0] * vmort[image].cols) / epiline[1]);
+      Vec3f epiline = epilines[image].at(epilineIndex);
+      Point p = Point(0, -epiline[2] / epiline[1]);
+      Point q = Point(vmort[image].cols, (-epiline[2] - epiline[0] * vmort[image].cols) / epiline[1]);
 
       distance += fabs(epiline[0] * right_corresp[image][epilineIndex].x + epiline[1] * right_corresp[image][epilineIndex].y + epiline[2]) / sqrt(epiline[0]*epiline[0] + epiline[1]*epiline[1]);
 
-  		line(vmort[image], p, q, color);
-  		circle(vmort[image], right_corresp[image][epilineIndex], 5, color);
-  	}
+      line(vmort[image], p, q, color);
+      circle(vmort[image], right_corresp[image][epilineIndex], 5, color);
+    }
   }
 
   // Compute average of distance between correspondences and epilines
@@ -214,11 +212,123 @@ int main(int argc, char const *argv[]) {
 
   waitKey();
   destroyAllWindows();
+}
 
-  /* Exercise 4 */
+void exercise4()
+{
+  const unsigned IMAGES = 3;
+  vector<Mat> reconstruccion;
+  vector<Mat> cameraMatrix;
+  // Load images
+
+  reconstruccion.push_back(imread("imagenes/rdimage.000.ppm", CV_LOAD_IMAGE_COLOR));
+  reconstruccion.push_back(imread("imagenes/rdimage.001.ppm", CV_LOAD_IMAGE_COLOR));
+  reconstruccion.push_back(imread("imagenes/rdimage.004.ppm", CV_LOAD_IMAGE_COLOR));
+
+  // Matrix taken from data files
+  cameraMatrix.push_back(Mat(3, 3, CV_64FC1, new float[3][3] {{1839.6300000000001091, 0.0, 1024.2000000000000455 },
+                                                              {0.0, 1848.0699999999999363, 686.5180000000000291},
+                                                              {0.0, 0.0, 1.0} } ));
+  cameraMatrix.push_back(Mat(3, 3, CV_64FC1, new float[3][3] {{1839.6300000000001091, 0.0, 1024.2000000000000455 },
+                                                              {0.0, 1848.0699999999999363, 686.5180000000000291},
+                                                              {0.0, 0.0, 1.0} } ));
+  cameraMatrix.push_back(Mat(3, 3, CV_64FC1, new float[3][3] {{1839.6300000000001091, 0.0, 1024.2000000000000455 },
+                                                              {0.0, 1848.0699999999999363, 686.5180000000000291},
+                                                              {0.0, 0.0, 1.0} } ));
+
+  // Detect correspondences between pairs
+  vector<KeyPoint> keypoints[IMAGES];
+  Mat descriptors[IMAGES];
+
+  Ptr<BRISK> ptrBrisk = BRISK::create(65);
+
+  for (unsigned i = 0; i < IMAGES; i++)
+  {
+    ptrBrisk->detect(reconstruccion[i], keypoints[i]);
+    ptrBrisk->compute(reconstruccion[i], keypoints[i],descriptors[i]);
+  }
+
+  BFMatcher matcher(NORM_HAMMING, true);
+  vector<DMatch> matches[IMAGES - 1];
+
+  // Match!
+  vector<Point2f> corresp[IMAGES - 1][2];
+  for (unsigned i = 0; i < IMAGES - 1; i++)
+    matcher.match(descriptors[i], descriptors[i+1], matches[i]);
+
+  // Get correspondence points
+  for (int image = 0; image < IMAGES - 1; image++)
+    for (int i = 0; i < matches[image].size(); i++)
+    {
+      corresp[image][0].push_back(keypoints[0][ matches[image][i].queryIdx ].pt);
+      corresp[image][1].push_back(keypoints[1][ matches[image][i].trainIdx ].pt);
+    }
+
+  // Get fundamental matrix between cameras
+  vector<Mat> fundamentals;
+  for (unsigned i = 0; i < IMAGES - 1; i++)
+    fundamentals.push_back(cv::findFundamentalMat(corresp[i][0], corresp[i][1], CV_FM_RANSAC, 1));
+
+  // Get essential matrix for cameras
+  vector<Mat> essentials;
+  for (unsigned i = 0; i < IMAGES - 1; i++)
+    essentials.push_back(cameraMatrix[i].t() * fundamentals[i] * cameraMatrix[i]);
+
+  vector< pair<Mat, Vec3d> > Rt;
+
+  // Algorithm!
+  for (unsigned i = 0; i < essentials.size(); i++)
+  {
+    Mat E = essentials[i];
+    cout << "E" << E << endl;
+    // Getting EE^T
+    Mat eet = E * E.t();
+    cout << "EET" << eet << endl;
+
+    // Getting BB^T using Horn's paper
+    Mat bbt = trace(eet).val[0]*Mat::eye(3,3,CV_64FC1)/2.0 - eet;
+
+    cout << "BBT" << bbt << endl;
+    // Get traslation vector (B for Baseline)
+    Vec3d B(sqrt(bbt.at<double>(0,0)), sqrt(bbt.at<double>(1,1)), sqrt(bbt.at<double>(2,2)) );
+
+    cout << "B" << B << endl;
+    // Cofactors calculus
+    cout << "Cofactors" << endl;
+    Mat e1 = E.row(1).cross(E.row(2));
+    Mat e2 = E.row(2).cross(E.row(0));
+    Mat e3 = E.row(0).cross(E.row(1));
+
+    cout << "CofactorsCopy" << endl;
+    Mat cofactors = Mat::zeros(3,3,CV_64FC1);
+    e1.copyTo(cofactors.row(0));
+    e2.copyTo(cofactors.row(1));
+    e3.copyTo(cofactors.row(2));
+
+    cout << "Rotation" << endl;
+    // Get rotation matrix (R)
+    Mat R = (cofactors - B*E) / (B.dot(B));
+
+    Rt.push_back(pair<Mat,Vec3d>(R,B));
+
+  }
+
+  for (unsigned i = 0; i < Rt.size(); i++)
+  {
+    cout << Rt[i].first << " " << Rt[i].second << endl;
+  }
 
 
+}
 
+
+int main(int argc, char const *argv[]) {
+  theRNG().state = clock();
+
+  // exercise1();
+  exercise2();
+  // exercise3();
+  // exercise4();
 
   return 0;
 }

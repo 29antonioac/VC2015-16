@@ -83,7 +83,7 @@ float Camera::error(Camera other)
     for (int j = 0; j < diff.cols; j++)
       error += diff.at<float>(i,j) * diff.at<float>(i,j);
 
-  error = sqrt(error);
+  // error = sqrt(error);
 
   return error;
 }
