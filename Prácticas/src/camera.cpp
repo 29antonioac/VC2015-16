@@ -24,7 +24,7 @@ Camera::Camera(vector< pair<Point3f, Point2f> > correspondences)
     A.at<float>(2 * i, 4) = -correspondences[i].first.x;
     A.at<float>(2 * i, 5) = -correspondences[i].first.y;
     A.at<float>(2 * i, 6) = -correspondences[i].first.z;
-    A.at<float>(2 * i, 7) = 1.0;
+    A.at<float>(2 * i, 7) = -1.0;
     A.at<float>(2 * i, 8) = correspondences[i].second.y * correspondences[i].first.x;
     A.at<float>(2 * i, 9) = correspondences[i].second.y * correspondences[i].first.y;
     A.at<float>(2 * i,10) = correspondences[i].second.y * correspondences[i].first.z;

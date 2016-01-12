@@ -1,0 +1,255 @@
+\documentclass[a4paper, 11pt]{article}
+
+%Comandos para configurar el idioma
+\usepackage[spanish,activeacute]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc} %Necesario para el uso de las comillas latinas.
+\usepackage{geometry} % Used to adjust the document margins
+
+%Importante que esta sea la última órden del preámbulo
+\usepackage{hyperref}
+   \hypersetup{
+     pdftitle={Cuestionario de teoría 3},
+     pdfauthor={Antonio Álvarez Caballero},
+     unicode,
+     breaklinks=true,  % so long urls are correctly broken across lines
+     colorlinks=true,
+     urlcolor=blue,
+     linkcolor=darkorange,
+     citecolor=darkgreen,
+     }
+
+   % Slightly bigger margins than the latex defaults
+
+   \geometry{verbose,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in}
+\newcommand\fnurl[2]{%
+  \href{#2}{#1}\footnote{\url{#2}}%
+}
+
+%Paquetes matemáticos
+\usepackage{amsmath,amsfonts,amsthm}
+\usepackage[all]{xy} %Para diagramas
+\usepackage{enumerate} %Personalización de enumeraciones
+\usepackage{tikz} %Dibujos
+\usepackage{ wasysym } % Para la sonrisa
+
+%Tipografía escalable
+\usepackage{lmodern}
+%Legibilidad
+\usepackage{microtype}
+
+%Código
+\usepackage{listings}
+\usepackage{color}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\definecolor{orange}{cmyk}{0,0.4,0.8,0.2}
+\definecolor{darkorange}{rgb}{.71,0.21,0.01}
+\definecolor{darkgreen}{rgb}{.12,.54,.11}
+\definecolor{myteal}{rgb}{.26, .44, .56}
+\definecolor{gray}{gray}{0.45}
+\definecolor{lightgray}{gray}{.95}
+\definecolor{mediumgray}{gray}{.8}
+
+\setlength{\parskip}{.5em} % por defecto el espacio entre párrafos es 0pt
+
+
+
+
+\lstset{frame=tb,
+  language=Python,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+
+\title{Cuestionario de teoría 3}
+\author{Antonio Álvarez Caballero\\
+    \href{mailto:analca3@correo.ugr.es}{analca3@correo.ugr.es}}
+\date{\today}
+
+\theoremstyle{definition}
+\newtheorem{ejercicio}{Ejercicio}
+\newtheorem{cuestion}{Cuestión}
+\newtheorem*{solucion}{Solución}
+\newtheorem*{bonus}{BONUS}
+
+
+%%%%%%%% New sqrt
+\usepackage{letltxmacro}
+\makeatletter
+\let\oldr@@t\r@@t
+\def\r@@t#1#2{%
+\setbox0=\hbox{$\oldr@@t#1{#2\,}$}\dimen0=\ht0
+\advance\dimen0-0.2\ht0
+\setbox2=\hbox{\vrule height\ht0 depth -\dimen0}%
+{\box0\lower0.4pt\box2}}
+\LetLtxMacro{\oldsqrt}{\sqrt}
+\renewcommand*{\sqrt}[2][\ ]{\oldsqrt[#1]{#2} }
+\makeatother
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+  \maketitle
+
+  \section{Cuestiones}
+
+  \begin{cuestion}
+    En clase se ha mostrado una técnica para estimar el vector de traslación del movimiento de
+    un par estéreo y solo ha podido estimarse su dirección. Argumentar de forma lógica a favor o
+    en contra del hecho de que dicha restricción sea debida a la técnica usada o sea un problema
+    inherente a la reconstrucción.
+  \end{cuestion}
+
+  \begin{solucion}
+    Esta restricción es debida a la técnica usada. Dicho método estima la matriz
+    esencial utilizando esta igualdad:
+    \[ E^T E = [T]_x R R^T [T] = [T]_x [T] = \left(
+    \begin{array}{ccc}
+        T_y^2 + T_x^2 & -T_xT_y & -T_xT_z \\
+        -T_yT_x & T_z^2 + T_x^2 & -T_yT_z \\
+        -T_zT_x & -T_zT_y & T_z^2 + T_x^2 \\
+    \end{array}
+    \right) \]
+    Aún normalizando la matriz con su traza, siguen apareciendo términos cuadráticos,
+    lo que al ir resolviendo el sistema $$3\times3$$ que sale (tomando cualquier fila o columna de la normalizada)
+    dichos términos presentan ambigüedad en su signo al tomar raíces cuadradas, por
+    lo que se toma uno cualquiera y después en el \textit{Algoritmo de Reconstrucción Euclídea}
+    se corrige. Por el hecho de que se corrige podemos afirmar que no es algo inherente a la reconstrucción.
+  \end{solucion}
+
+  \begin{cuestion}
+    Verificar matemáticamente que se deben de cumplir las ecuaciones $$ Fe = 0, F^Te'= 0$$
+
+  \end{cuestion}
+
+  \begin{solucion}
+
+      $$\smiley$$
+
+
+  \end{solucion}
+
+  \begin{cuestion}
+    Verificar matemáticamente que cuando una cámara se desplaza las coordenadas retina de
+puntos correspondientes sobre la retina deben de verificar la ecuación $$ x' = x + \frac{Kt}{Z} $$
+
+  \end{cuestion}
+
+  \begin{solucion}
+      ...
+  \end{solucion}
+
+  \begin{cuestion}
+    Dar una interpretación geométrica a las columnas y filas de la matriz $$P$$ de una cámara.
+
+  \end{cuestion}
+
+  \begin{solucion}
+    ...
+  \end{solucion}
+
+  \begin{cuestion}
+    Suponga una matriz $$ A \in \mathcal{M}_{3\times3}$$ de números reales.
+    Suponga $$rango(A)=3$$. ¿Cuál es la matriz esencial más cercana a A en norma de Frobenius?
+    Argumentar matemáticamente la derivación.
+  \end{cuestion}
+
+  \begin{solucion}
+    ...
+  \end{solucion}
+
+  \begin{cuestion}
+    Discutir cuales son las ventajas y desventajas de usar un algoritmo de reconstrucción
+    Euclídea que calcule la profundidad de varios puntos a la vez en lugar de uno a uno.
+
+  \end{cuestion}
+
+  \begin{solucion}
+      ...
+  \end{solucion}
+
+  \begin{cuestion}
+    Deducir la expresión para la matriz Esencial $$E = [t]_x R = R[R^Tt]_x$$.
+    Justificar cada uno de los pasos
+
+  \end{cuestion}
+
+  \begin{solucion}
+    ...
+  \end{solucion}
+
+  \begin{cuestion}
+    Dada una pareja de cámaras cualesquiera, ¿existen puntos del espacio que no tengan un
+    plano epipolar asociado? Justificar la respuesta
+  \end{cuestion}
+
+  \begin{solucion}
+    Reduzcamos este problema a uno de geometría en $$\mathcal{R}^3$$: Para un
+    punto $$x$$ fijo (punto escena) y dos puntos $$p,q$$ libres en el
+    espacio (las cámaras), ¿existe siempre un plano (plano epipolar) entre estos 3 puntos?
+    La respuesta es clara: no. Si los 3 puntos forman una recta, no pueden formar un plano.
+    Estos 3 puntos deben ser linealmente independientes, formar una base. Es un problema
+    básico de geomtría en el espacio euclídeo.
+  \end{solucion}
+
+
+  \begin{cuestion}
+    Si nos dan las coordenadas de proyección de un punto escena en la cámara-1 y nos dicen
+    cuál es el movimiento relativo de la cámara-2 respecto de la cámara-1, ¿es posible reconstruir
+    la profundidad del punto si las cámaras están calibradas?. Justificar la contestación
+  \end{cuestion}
+
+  \begin{solucion}
+     	Como las cámaras están calibradas, podemos obtener, con el movimiento relativo de
+      la cámara 2 con respecto a la 1, la proyección del punto en la cámara 2. Con esto
+      y reafirmarndo que ambas cámaras están calibradas, podemos aplicar reconstrucción
+      por triangulación, que es el caso simple al conocer todos los datos. 
+  \end{solucion}
+  \begin{cuestion}
+    Suponga que obtiene una foto de una escena y la cámara gira para obtener otra foto ¿Cuál
+    es la ecuación que liga las coordenadas de la proyecciones en ambas imágenes, de un mismo
+    punto escena, en términos de los parámetros de las cámaras. Justificar matemáticamente
+
+  \end{cuestion}
+
+  \begin{solucion}
+     	...
+  \end{solucion}
+  \begin{cuestion}
+    Suponga una cámara Afín. Discutir cuales son los efectos de la proyección ortogonal sobre
+    los parámetros intrínsecos y extrínsecos de la cámara.
+
+  \end{cuestion}
+
+  \begin{solucion}
+     	...
+  \end{solucion}
+
+  \begin{cuestion}
+    Dadas dos cámaras calibradas, P=K[I|0] y P'=K'[R|t]. Calcular la expresión de la matriz
+    fundamental en términos de los parámetros intrínsecos y extrínsecos de las cámaras. Todos los
+    pasos deben ser justificados
+
+  \end{cuestion}
+
+  \begin{solucion}
+     	...
+  \end{solucion}
+
+
+\end{document}

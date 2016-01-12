@@ -12,6 +12,29 @@ using namespace cv;
 
 RNG rng;
 
+string type2str(int type) {
+  string r;
+
+  uchar depth = type & CV_MAT_DEPTH_MASK;
+  uchar chans = 1 + (type >> CV_CN_SHIFT);
+
+  switch ( depth ) {
+    case CV_8U:  r = "8U"; break;
+    case CV_8S:  r = "8S"; break;
+    case CV_16U: r = "16U"; break;
+    case CV_16S: r = "16S"; break;
+    case CV_32S: r = "32S"; break;
+    case CV_32F: r = "32F"; break;
+    case CV_64F: r = "64F"; break;
+    default:     r = "User"; break;
+  }
+
+  r += "C";
+  r += (chans+'0');
+
+  return r;
+}
+
 void exercise1()
 {
   vector<Point3f> worldPoints;
@@ -164,7 +187,7 @@ void exercise3()
 
   // Compute fundamental matrix
   vector<unsigned char> taken;
-  Mat F = cv::findFundamentalMat(corresp[0], corresp[1], CV_FM_RANSAC, 1, 0.99, taken);
+  Mat F = cv::findFundamentalMat(corresp[0], corresp[1], CV_FM_8POINT | CV_FM_RANSAC, 1, 0.99, taken);
   cout << F << endl;
 
   vector<Point2f> right_corresp[2];
@@ -226,13 +249,13 @@ void exercise4()
   reconstruccion.push_back(imread("imagenes/rdimage.004.ppm", CV_LOAD_IMAGE_COLOR));
 
   // Matrix taken from data files
-  cameraMatrix.push_back(Mat(3, 3, CV_64FC1, new float[3][3] {{1839.6300000000001091, 0.0, 1024.2000000000000455 },
+  cameraMatrix.push_back(Mat(3, 3, CV_64FC1, new double[3][3] {{1839.6300000000001091, 0.0, 1024.2000000000000455 },
                                                               {0.0, 1848.0699999999999363, 686.5180000000000291},
                                                               {0.0, 0.0, 1.0} } ));
-  cameraMatrix.push_back(Mat(3, 3, CV_64FC1, new float[3][3] {{1839.6300000000001091, 0.0, 1024.2000000000000455 },
+  cameraMatrix.push_back(Mat(3, 3, CV_64FC1, new double[3][3] {{1839.6300000000001091, 0.0, 1024.2000000000000455 },
                                                               {0.0, 1848.0699999999999363, 686.5180000000000291},
                                                               {0.0, 0.0, 1.0} } ));
-  cameraMatrix.push_back(Mat(3, 3, CV_64FC1, new float[3][3] {{1839.6300000000001091, 0.0, 1024.2000000000000455 },
+  cameraMatrix.push_back(Mat(3, 3, CV_64FC1, new double[3][3] {{1839.6300000000001091, 0.0, 1024.2000000000000455 },
                                                               {0.0, 1848.0699999999999363, 686.5180000000000291},
                                                               {0.0, 0.0, 1.0} } ));
 
@@ -240,7 +263,7 @@ void exercise4()
   vector<KeyPoint> keypoints[IMAGES];
   Mat descriptors[IMAGES];
 
-  Ptr<BRISK> ptrBrisk = BRISK::create(65);
+  Ptr<BRISK> ptrBrisk = BRISK::create(35);
 
   for (unsigned i = 0; i < IMAGES; i++)
   {
@@ -249,12 +272,13 @@ void exercise4()
   }
 
   BFMatcher matcher(NORM_HAMMING, true);
-  vector<DMatch> matches[IMAGES - 1];
+  vector<DMatch> matches[IMAGES];
 
   // Match!
-  vector<Point2f> corresp[IMAGES - 1][2];
+  vector<Point2f> corresp[IMAGES][2];
   for (unsigned i = 0; i < IMAGES - 1; i++)
     matcher.match(descriptors[i], descriptors[i+1], matches[i]);
+  matcher.match(descriptors[0], descriptors[IMAGES - 1], matches[IMAGES - 1]);
 
   // Get correspondence points
   for (int image = 0; image < IMAGES - 1; image++)
@@ -263,53 +287,77 @@ void exercise4()
       corresp[image][0].push_back(keypoints[0][ matches[image][i].queryIdx ].pt);
       corresp[image][1].push_back(keypoints[1][ matches[image][i].trainIdx ].pt);
     }
+  for (int i = 0; i < matches[IMAGES - 1].size(); i++)
+  {
+    corresp[IMAGES - 1][0].push_back(keypoints[0][ matches[IMAGES - 1][i].queryIdx ].pt);
+    corresp[IMAGES - 1][1].push_back(keypoints[1][ matches[IMAGES - 1][i].trainIdx ].pt);
+  }
 
   // Get fundamental matrix between cameras
   vector<Mat> fundamentals;
   for (unsigned i = 0; i < IMAGES - 1; i++)
-    fundamentals.push_back(cv::findFundamentalMat(corresp[i][0], corresp[i][1], CV_FM_RANSAC, 1));
+    fundamentals.push_back(cv::findFundamentalMat(corresp[i][0], corresp[i][1], CV_FM_8POINT | CV_FM_RANSAC, 1));
+  fundamentals.push_back(cv::findFundamentalMat(corresp[IMAGES - 1][0], corresp[IMAGES - 1][1], CV_FM_8POINT | CV_FM_RANSAC, 1));
 
   // Get essential matrix for cameras
   vector<Mat> essentials;
   for (unsigned i = 0; i < IMAGES - 1; i++)
     essentials.push_back(cameraMatrix[i].t() * fundamentals[i] * cameraMatrix[i]);
+  essentials.push_back(cameraMatrix[IMAGES - 1].t() * fundamentals[IMAGES - 1] * cameraMatrix[IMAGES - 1]);
 
   vector< pair<Mat, Vec3d> > Rt;
 
   // Algorithm!
   for (unsigned i = 0; i < essentials.size(); i++)
   {
+    cout << "Fundamental " << fundamentals[i] << endl;
+    // cout << "Essential " << essentials[i] << endl;
     Mat E = essentials[i];
-    cout << "E" << E << endl;
     // Getting EE^T
-    Mat eet = E * E.t();
-    cout << "EET" << eet << endl;
+    Mat eet = E.t() * E;
+    eet /= trace(eet).val[0] / 2;
+    eet = Mat::eye(3,3,CV_64FC1) - eet;
+    E /= sqrt(trace(eet).val[0] / 2);
+    // cout << "EET" << eet << endl;
 
-    // Getting BB^T using Horn's paper
-    Mat bbt = trace(eet).val[0]*Mat::eye(3,3,CV_64FC1)/2.0 - eet;
+    // Getting translation
+    int max_row = 0;
+    if(eet.at<double>(1,1) > eet.at<double>(0,0))
+		  max_row = 1;
+    if(eet.at<double>(2,2) > eet.at<double>(max_row,max_row))
+		  max_row = 2;
 
-    cout << "BBT" << bbt << endl;
-    // Get traslation vector (B for Baseline)
-    Vec3d B(sqrt(bbt.at<double>(0,0)), sqrt(bbt.at<double>(1,1)), sqrt(bbt.at<double>(2,2)) );
+    Vec3d T(eet.row(max_row));
+    T /= sqrt(eet.at<double>(max_row,max_row));
 
-    cout << "B" << B << endl;
-    // Cofactors calculus
-    cout << "Cofactors" << endl;
-    Mat e1 = E.row(1).cross(E.row(2));
-    Mat e2 = E.row(2).cross(E.row(0));
-    Mat e3 = E.row(0).cross(E.row(1));
+    // double Tx = -(v[max_row] - 1)/sqrt(fabs(v[max_row]-1));
+    // cout << "Den = " << sqrt(fabs(v[max_row]-1)) << endl;
 
-    cout << "CofactorsCopy" << endl;
-    Mat cofactors = Mat::zeros(3,3,CV_64FC1);
-    e1.copyTo(cofactors.row(0));
-    e2.copyTo(cofactors.row(1));
-    e3.copyTo(cofactors.row(2));
+    // Vec3d T(Tx, -v[1]/Tx, -v[2]/Tx);
 
-    cout << "Rotation" << endl;
-    // Get rotation matrix (R)
-    Mat R = (cofactors - B*E) / (B.dot(B));
+    // cout << "T " << T << endl;
 
-    Rt.push_back(pair<Mat,Vec3d>(R,B));
+    Mat w[3];
+    // cout << type2str(E.row(0).type()) << "," << E.row(0).rows << "x" << E.row(0).cols << endl;
+    Mat tmp(T, CV_64FC1);
+    tmp = tmp.t();
+
+    w[0] = E.row(0).cross(tmp);
+    w[1] = E.row(1).cross(tmp);
+    w[2] = E.row(2).cross(tmp);
+
+    // cout << type2str(w[0].type()) << "," << w[0].rows << "x" << w[0].cols << endl;
+
+    Mat R1 = w[0] + w[1].cross(w[2]);
+    Mat R2 = w[1] + w[2].cross(w[0]);
+    Mat R3 = w[2] + w[0].cross(w[1]);
+
+    Mat R = Mat(3,3, CV_32FC1);
+    R1.copyTo(R.row(0));
+    R2.copyTo(R.row(1));
+    R3.copyTo(R.row(2));
+
+    Rt.push_back(pair<Mat,Vec3d>(R,T));
 
   }
 
@@ -326,9 +374,9 @@ int main(int argc, char const *argv[]) {
   theRNG().state = clock();
 
   // exercise1();
-  exercise2();
+  // exercise2();
   // exercise3();
-  // exercise4();
+  exercise4();
 
   return 0;
 }
