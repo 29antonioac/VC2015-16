@@ -330,12 +330,7 @@ void exercise4()
     Vec3d T(eet.row(max_row));
     T /= sqrt(eet.at<double>(max_row,max_row));
 
-    // double Tx = -(v[max_row] - 1)/sqrt(fabs(v[max_row]-1));
-    // cout << "Den = " << sqrt(fabs(v[max_row]-1)) << endl;
-
-    // Vec3d T(Tx, -v[1]/Tx, -v[2]/Tx);
-
-    // cout << "T " << T << endl;
+    // Get w
 
     Mat w[3];
     // cout << type2str(E.row(0).type()) << "," << E.row(0).rows << "x" << E.row(0).cols << endl;
@@ -358,8 +353,9 @@ void exercise4()
     R3.copyTo(R.row(2));
 
     Rt.push_back(pair<Mat,Vec3d>(R,T));
-
   }
+
+  
 
   for (unsigned i = 0; i < Rt.size(); i++)
   {
