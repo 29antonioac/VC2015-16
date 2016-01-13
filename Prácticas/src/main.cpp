@@ -241,23 +241,17 @@ void exercise4()
 {
   const unsigned IMAGES = 3;
   vector<Mat> reconstruccion;
-  vector<Mat> cameraMatrix;
-  // Load images
+  Mat cameraMatrix(Mat(3, 3, CV_64FC1, new double[3][3] {{1839.6300000000001091, 0.0, 1024.2000000000000455 },
+                                                              {0.0, 1848.0699999999999363, 686.5180000000000291},
+                                                              {0.0, 0.0, 1.0} } ));;
 
+  double f_i = 1839.6300000000001091;
+  double f_d = f_i;
+
+  // Load images
   reconstruccion.push_back(imread("imagenes/rdimage.000.ppm", CV_LOAD_IMAGE_COLOR));
   reconstruccion.push_back(imread("imagenes/rdimage.001.ppm", CV_LOAD_IMAGE_COLOR));
   reconstruccion.push_back(imread("imagenes/rdimage.004.ppm", CV_LOAD_IMAGE_COLOR));
-
-  // Matrix taken from data files
-  cameraMatrix.push_back(Mat(3, 3, CV_64FC1, new double[3][3] {{1839.6300000000001091, 0.0, 1024.2000000000000455 },
-                                                              {0.0, 1848.0699999999999363, 686.5180000000000291},
-                                                              {0.0, 0.0, 1.0} } ));
-  cameraMatrix.push_back(Mat(3, 3, CV_64FC1, new double[3][3] {{1839.6300000000001091, 0.0, 1024.2000000000000455 },
-                                                              {0.0, 1848.0699999999999363, 686.5180000000000291},
-                                                              {0.0, 0.0, 1.0} } ));
-  cameraMatrix.push_back(Mat(3, 3, CV_64FC1, new double[3][3] {{1839.6300000000001091, 0.0, 1024.2000000000000455 },
-                                                              {0.0, 1848.0699999999999363, 686.5180000000000291},
-                                                              {0.0, 0.0, 1.0} } ));
 
   // Detect correspondences between pairs
   vector<KeyPoint> keypoints[IMAGES];
@@ -302,8 +296,8 @@ void exercise4()
   // Get essential matrix for cameras
   vector<Mat> essentials;
   for (unsigned i = 0; i < IMAGES - 1; i++)
-    essentials.push_back(cameraMatrix[i].t() * fundamentals[i] * cameraMatrix[i]);
-  essentials.push_back(cameraMatrix[IMAGES - 1].t() * fundamentals[IMAGES - 1] * cameraMatrix[IMAGES - 1]);
+    essentials.push_back(cameraMatrix.t() * fundamentals[i] * cameraMatrix);
+  essentials.push_back(cameraMatrix.t() * fundamentals[IMAGES - 1] * cameraMatrix);
 
   vector< pair<Mat, Vec3d> > Rt;
 
@@ -311,14 +305,13 @@ void exercise4()
   for (unsigned i = 0; i < essentials.size(); i++)
   {
     cout << "Fundamental " << fundamentals[i] << endl;
-    // cout << "Essential " << essentials[i] << endl;
     Mat E = essentials[i];
-    // Getting EE^T
+
     Mat eet = E.t() * E;
     eet /= trace(eet).val[0] / 2;
     eet = Mat::eye(3,3,CV_64FC1) - eet;
     E /= sqrt(trace(eet).val[0] / 2);
-    // cout << "EET" << eet << endl;
+
 
     // Getting translation
     int max_row = 0;
@@ -330,36 +323,100 @@ void exercise4()
     Vec3d T(eet.row(max_row));
     T /= sqrt(eet.at<double>(max_row,max_row));
 
-    // Get w
+    Mat R, R1, R2, R3;
 
-    Mat w[3];
-    // cout << type2str(E.row(0).type()) << "," << E.row(0).rows << "x" << E.row(0).cols << endl;
-    Mat tmp(T, CV_64FC1);
-    tmp = tmp.t();
+    for (unsigned p = 0; p < corresp[i][0].size(); p++)
+    {
+      Point2d p_i = corresp[i][0][p];
+      Point2d p_d = corresp[i][1][p];
 
-    w[0] = E.row(0).cross(tmp);
-    w[1] = E.row(1).cross(tmp);
-    w[2] = E.row(2).cross(tmp);
+      double x_d = p_d.x;
 
-    // cout << type2str(w[0].type()) << "," << w[0].rows << "x" << w[0].cols << endl;
+      double Z_i = -1.0, Z_d = 1.0;
 
-    Mat R1 = w[0] + w[1].cross(w[2]);
-    Mat R2 = w[1] + w[2].cross(w[0]);
-    Mat R3 = w[2] + w[0].cross(w[1]);
+      while (Z_i <= 0.0 || Z_d <= 0.0)
+      {
+        // cout << "Z_i = " << Z_i << ", Z_d = " << Z_d << endl;
+        if ((Z_i < 0.0 && Z_d > 0.0) || (Z_i > 0.0 && Z_d < 0.0))
+        {
+          // cout << "DISTINTOS" << endl;
+          E = -E;
 
-    Mat R = Mat(3,3, CV_32FC1);
-    R1.copyTo(R.row(0));
-    R2.copyTo(R.row(1));
-    R3.copyTo(R.row(2));
+          // Get w
+          Mat w[3];
+          // cout << type2str(E.row(0).type()) << "," << E.row(0).rows << "x" << E.row(0).cols << endl;
+          Mat tmp(T, CV_64FC1);
+          tmp = tmp.t();
+
+          w[0] = E.row(0).cross(tmp);
+          w[1] = E.row(1).cross(tmp);
+          w[2] = E.row(2).cross(tmp);
+
+          // cout << type2str(w[0].type()) << "," << w[0].rows << "x" << w[0].cols << endl;
+
+          R1 = w[0] + w[1].cross(w[2]);
+          R2 = w[1] + w[2].cross(w[0]);
+          R3 = w[2] + w[0].cross(w[1]);
+
+          R = Mat(3,3, CV_64FC1);
+          R1.copyTo(R.row(0));
+          R2.copyTo(R.row(1));
+          R3.copyTo(R.row(2));
+
+          // Z_i = Z_d = -1.0;
+          Mat p_hom = Mat(Vec3d(p_i.x, p_i.y, 1.0));
+          Mat T_mat = Mat(T);
+
+          // Calcular Z_i y Z_d
+          Mat aux = (f_d * R1 - x_d*R3);
+
+          Mat num = aux * T_mat;
+          Mat den = aux * p_hom;
+
+          Mat m_Z_i = f_i * num / den;
+
+          Z_i = m_Z_i.at<double>(0,0);
+
+          Mat pt_3D_i = Z_i * p_hom / f_i;
+
+          Mat m_Z_d = R2 * (pt_3D_i - T_mat);
+          Z_d = m_Z_d.at<double>(0,0);
+
+        }
+
+        if (Z_i < 0.0 && Z_d < 0.0)
+        {
+          // cout << "Iguales" << endl;
+          T = -T;
+          Mat p_hom = Mat(Vec3d(p_i.x, p_i.y, 1.0));
+          Mat T_mat = Mat(T);
+
+          // Calcular Z_i y Z_d
+          Mat aux = (f_d * R1 - x_d*R3);
+
+          Mat num = aux * T_mat;
+          Mat den = aux * p_hom;
+
+          Mat m_Z_i = f_i * num / den;
+
+          Z_i = m_Z_i.at<double>(0,0);
+
+          Mat pt_3D_i = Z_i * p_hom / f_i;
+
+          Mat m_Z_d = R2 * (pt_3D_i - T_mat);
+          Z_d = m_Z_d.at<double>(0,0);
+        }
+      }
+    }
 
     Rt.push_back(pair<Mat,Vec3d>(R,T));
   }
 
-  
+
 
   for (unsigned i = 0; i < Rt.size(); i++)
   {
-    cout << Rt[i].first << " " << Rt[i].second << endl;
+    cout << "R = " << Rt[i].first << "\nT = " << Rt[i].second << "\n" << endl;
   }
 
 
