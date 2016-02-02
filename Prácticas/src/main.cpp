@@ -60,7 +60,7 @@ void exercise1()
 
   Camera estimated(correspondences);
 
-  cout << "Error = " << randomFinite.error(estimated) << endl;
+  cout << "Error estimando = " << randomFinite.error(estimated) << endl;
 
   vector<Point2f> newProjectedPoints;
 
@@ -101,16 +101,16 @@ void exercise2()
     if (valid)
     {
       cornerSubPix(images[i], corners, Size(5, 5), Size(-1, -1),
-        TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
+        TermCriteria());
       valid_images.push_back(images[i]);
       imagePoints.push_back(corners);
       cv::drawChessboardCorners(images[i], patternSize, corners, valid);
     }
   }
 
-  for (int i = 0; i < CHESS_IMAGES; i++)
+  for (int i = 0; i < valid_images.size(); i++)
   {
-    imshow("Imagen " + to_string(i+1), images[i]);
+    imshow("Imagen " + to_string(i+1), valid_images[i]);
     waitKey();
     destroyAllWindows();
   }
@@ -136,18 +136,19 @@ void exercise2()
   vector< Mat > rotationVectors;
   vector< Mat > translationVectors;
 
-  bool distorsion = false;
+  int no_distorsion_flags = CV_CALIB_ZERO_TANGENT_DIST | CV_CALIB_FIX_K1 | CV_CALIB_FIX_K2 | CV_CALIB_FIX_K3;
+  int radial_distorsion_flags = CV_CALIB_ZERO_TANGENT_DIST;
+  int tangential_distorsion_flags = CV_CALIB_FIX_K1 | CV_CALIB_FIX_K2 | CV_CALIB_FIX_K3;
 
-  int flags = 0;
-  if (distorsion)
-    flags = CV_CALIB_RATIONAL_MODEL;
-  else
-    flags = CV_CALIB_ZERO_TANGENT_DIST;
+  double error_no_distorsion = calibrateCamera(objectPoints, imagePoints, imageSize, cameraMatrix, distCoeffs, rotationVectors, translationVectors, no_distorsion_flags);
+  double error_radial_distorsion = calibrateCamera(objectPoints, imagePoints, imageSize, cameraMatrix, distCoeffs, rotationVectors, translationVectors, radial_distorsion_flags);
+  double error_tangential_distorsion = calibrateCamera(objectPoints, imagePoints, imageSize, cameraMatrix, distCoeffs, rotationVectors, translationVectors, tangential_distorsion_flags);
+  double error_all_distorsion = calibrateCamera(objectPoints, imagePoints, imageSize, cameraMatrix, distCoeffs, rotationVectors, translationVectors, 0);
 
-  double error = calibrateCamera(objectPoints, imagePoints, imageSize, cameraMatrix, distCoeffs, rotationVectors, translationVectors, flags);
-
-  cout << "CameraMatrix = " << cameraMatrix << endl;
-  cout << "Error calibrando = " << error << endl;
+  cout << "Error calibrando sin distorsión = " << error_no_distorsion << endl;
+  cout << "Error calibrando con distorsión radial = " << error_radial_distorsion << endl;
+  cout << "Error calibrando con distorsión tangencial = " << error_tangential_distorsion << endl;
+  cout << "Error calibrando con todas las distorsiones = " << error_all_distorsion << endl;
 }
 
 void exercise3()
@@ -188,7 +189,6 @@ void exercise3()
   // Compute fundamental matrix
   vector<unsigned char> taken;
   Mat F = cv::findFundamentalMat(corresp[0], corresp[1], CV_FM_8POINT | CV_FM_RANSAC, 1, 0.99, taken);
-  cout << F << endl;
 
   vector<Point2f> right_corresp[2];
   for (int i = 0; i < corresp[0].size(); i++)
@@ -237,7 +237,7 @@ void exercise3()
   destroyAllWindows();
 }
 
-void exercise4()
+bool exercise4()
 {
   const unsigned IMAGES = 3;
   vector<Mat> reconstruccion;
@@ -301,12 +301,13 @@ void exercise4()
 
   vector< pair<Mat, Vec3d> > Rt;
 
-  // Algorithm!
+  // Euclidean reconstruction algorithm!
   for (unsigned i = 0; i < essentials.size(); i++)
   {
-    cout << "Fundamental " << fundamentals[i] << endl;
+    // cout << "Fundamental " << fundamentals[i] << "\n" << endl;
     Mat E = essentials[i];
 
+    // Normalize
     Mat eet = E.t() * E;
     eet /= trace(eet).val[0] / 2;
     eet = Mat::eye(3,3,CV_64FC1) - eet;
@@ -325,6 +326,7 @@ void exercise4()
 
     Mat R, R1, R2, R3;
 
+    // For each point, recover Z_i and Z_d
     for (unsigned p = 0; p < corresp[i][0].size(); p++)
     {
       Point2d p_i = corresp[i][0][p];
@@ -334,25 +336,22 @@ void exercise4()
 
       double Z_i = -1.0, Z_d = 1.0;
 
-      while (Z_i <= 0.0 || Z_d <= 0.0)
+      int i = 1;
+
+      while ((Z_i <= 0.0 || Z_d <= 0.0) && i <= 4)
       {
-        // cout << "Z_i = " << Z_i << ", Z_d = " << Z_d << endl;
         if ((Z_i < 0.0 && Z_d > 0.0) || (Z_i > 0.0 && Z_d < 0.0))
         {
-          // cout << "DISTINTOS" << endl;
           E = -E;
 
           // Get w
           Mat w[3];
-          // cout << type2str(E.row(0).type()) << "," << E.row(0).rows << "x" << E.row(0).cols << endl;
           Mat tmp(T, CV_64FC1);
           tmp = tmp.t();
 
           w[0] = E.row(0).cross(tmp);
           w[1] = E.row(1).cross(tmp);
           w[2] = E.row(2).cross(tmp);
-
-          // cout << type2str(w[0].type()) << "," << w[0].rows << "x" << w[0].cols << endl;
 
           R1 = w[0] + w[1].cross(w[2]);
           R2 = w[1] + w[2].cross(w[0]);
@@ -363,11 +362,10 @@ void exercise4()
           R2.copyTo(R.row(1));
           R3.copyTo(R.row(2));
 
-          // Z_i = Z_d = -1.0;
           Mat p_hom = Mat(Vec3d(p_i.x, p_i.y, 1.0));
           Mat T_mat = Mat(T);
 
-          // Calcular Z_i y Z_d
+          // Get Z_i and Z_d
           Mat aux = (f_d * R1 - x_d*R3);
 
           Mat num = aux * T_mat;
@@ -386,12 +384,11 @@ void exercise4()
 
         if (Z_i < 0.0 && Z_d < 0.0)
         {
-          // cout << "Iguales" << endl;
           T = -T;
           Mat p_hom = Mat(Vec3d(p_i.x, p_i.y, 1.0));
           Mat T_mat = Mat(T);
 
-          // Calcular Z_i y Z_d
+          // Get Z_i and Z_d
           Mat aux = (f_d * R1 - x_d*R3);
 
           Mat num = aux * T_mat;
@@ -406,7 +403,15 @@ void exercise4()
           Mat m_Z_d = R2 * (pt_3D_i - T_mat);
           Z_d = m_Z_d.at<double>(0,0);
         }
+        i++;
       }
+
+    }
+
+    if (i >= 5)
+    {
+      cout << "Failed reconstruction!" << endl;
+      return false;
     }
 
     Rt.push_back(pair<Mat,Vec3d>(R,T));
@@ -419,17 +424,20 @@ void exercise4()
     cout << "R = " << Rt[i].first << "\nT = " << Rt[i].second << "\n" << endl;
   }
 
+  return true;
+
 
 }
 
 
 int main(int argc, char const *argv[]) {
   theRNG().state = clock();
+  // bool result = true;
 
-  // exercise1();
-  // exercise2();
-  // exercise3();
-  exercise4();
+  exercise1();
+  exercise2();
+  exercise3();
+  bool result = exercise4();
 
-  return 0;
+  return (int) !result;
 }

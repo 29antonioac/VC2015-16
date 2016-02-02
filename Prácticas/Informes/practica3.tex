@@ -107,7 +107,7 @@ rulecolor=,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \hypersetup{
-  pdftitle={Informe de trabajo 2},
+  pdftitle={Informe de trabajo 3},
   pdfauthor={Antonio Álvarez Caballero},
   unicode,
   breaklinks=true,  % so long urls are correctly broken across lines
@@ -117,7 +117,7 @@ rulecolor=,
   citecolor=darkgreen,
   }
 
-\title{Informe de trabajo 2}
+\title{Informe de trabajo 3}
 \author{Antonio Álvarez Caballero\\
     \href{mailto:analca3@correo.ugr.es}{analca3@correo.ugr.es}}
 \date{}
@@ -127,461 +127,457 @@ rulecolor=,
 
   \maketitle
 
-  \section{Estimación de una homografía}
+  \section{Estimación de una cámara a partir del conjunto de puntos en correspondencias}
 
-    La primera parte de la práctica consiste en estimar una homografía según dos
-    conjuntos de puntos y aplicársela a una imagen para llevárnosla al mismo plano que la segunda.
-    Usaremos las imágenes del tablero para realizar este ejercicio.
+    La primera parte de la práctica consiste en estimar una cámara finita a partir de un
+    conjunto de puntos en correspondencias.
 
-    \subsection{Selección de puntos}
+    \subsection{Cámara finita aleatoria}
 
-      Primero debemos seleccionar $10$ puntos a mano en correspondencia en cada uno de los tableros.
-      Después de varias pruebas de ensayo y error (poner los puntos medianamente simétricos no es una opción muy buena),
-      se escogen los puntos marcados en azul en la figura resultado.
-      Con esos puntos se consigue una buena homografía, las pruebas las he hecho poniendo una
-      imagen sobre otra, coincidiendo los cuadrados negros del tablero.
+      Primero debemos generar una cámara finita $P$ a partir de valores aleatorios en $[0,1]$.
+      Para ello usaremos el propio generador de números de \emph{OpenCV}. Para ello primero
+      debemos asignar su estado al reloj actual (para asegurar aleatoriedad) y después
+      usaremos la función \emph{randu}, que devuelve una matriz aleatoria con valores
+      entre los valores de entrada uniformemente distribuidos. Nos la quedamos si y solamente si
+      es finita, lo cual significa que la submatriz $3\times3$ principal es regular.
 
       \begin{lstlisting}
-        // Taking points by hand
-        vector<Point> origin, destination;
+        theRNG().state = clock();
+        ...
 
-        origin.push_back(Point(156,  49));
-        origin.push_back(Point(530,  13));
-        origin.push_back(Point(215,  90));
-        origin.push_back(Point(474, 103));
-        origin.push_back(Point(362, 134));
-        origin.push_back(Point(305, 330));
-        origin.push_back(Point(184, 348));
-        origin.push_back(Point(438, 397));
-        origin.push_back(Point(137, 422));
-        origin.push_back(Point(527, 464));
+        bool Camera::isFinite()
+        {
+          // Check if the first 3x3 submatrix is regular
+          Mat M = this->camera(Rect(0,0,3,3));
+          return determinant(M) != 0.0;
+        }
 
-        destination.push_back(Point(148,  14));
-        destination.push_back(Point(502,  96));
-        destination.push_back(Point(212,  80));
-        destination.push_back(Point(446, 157));
-        destination.push_back(Point(347, 160));
-        destination.push_back(Point(264, 322));
-        destination.push_back(Point(138, 323));
-        destination.push_back(Point(374, 386));
-        destination.push_back(Point(76 , 387));
-        destination.push_back(Point(431, 443));
+        Camera::Camera(float low, float high)
+        {
+          // Fill 3x4 matrix with zeros
+          this->camera = Mat::zeros(3, 4, CV_32FC1);
+
+          while (!this->isFinite())
+          {
+            // Set this->camera to randon matrix. Random values are uniformly distributed from low to high
+            randu(this->camera,low,high);
+          }
+        }
       \end{lstlisting}
 
-    \subsection{Estimación de la homografía y transformación}
+    \subsection{Simular patrón de puntos y proyectar}
 
-      Para estimar la homografía se usa lo visto en clase. Formamos una matriz con los
-      coeficientes de las ecuaciones que debemos resolver para conseguir la homografía
-      (salen $2n \times 9$ ecuaciones, siendo $n$ el número de puntos), y posteriormente
-      para resolver dicho sistema utilizamos la $SVD$. El vector singular asociado al valor
-      singular más pequeño será la solución buscada. Sólo tendremos que organizarlo como una matriz $3 \times 3$.
+      Ahora suponemos el patrón de puntos indicado y los proyectamos usando nuestra
+      cámara finita. Esto es simplemente tomando coordenadas homogéneas y multiplicando
+      matriz por punto. Después homogeneizamos la salida y tomamos sólo las componentes $X$ e $Y$.
 
-      Dejo el código usado para tal fin. Se ha creado una clase homografía con el único
-      propósito de restringir el tipo de dato que le entra a la función \textit{warpPerspective}
-      que he creado en la clase \textit{Image} para aplicar la homografía a la imagen.
 
       \begin{lstlisting}
-        Mat Homography::homographyEquationMatrix(vector<Point> origin, vector<Point> destination)
+        Point2f Camera::project(Point3f input)
         {
-          // Check input size
-          if (origin.size() != destination.size())
+          // Take input with homogeneous coordinates
+          Vec4f homogeneous (input.x, input.y, input.z, 1.0);
+
+          // Product with the camera
+          Mat result = this->camera * Mat(homogeneous);
+
+          // Quotient two first coordinates with last one
+          Point2f projection (result.at<float>(0) / result.at<float>(2), result.at<float>(1) / result.at<float>(2));
+
+          return projection;
+
+        }
+      \end{lstlisting}
+
+      \subsection{Estimación de la cámara con correspondencias}
+      Ahora estamos en condiciones de estimar una cámara con los puntos 3D del mundo y
+      sus proyecciones en la imagen. Para ello usaremos el algoritmo DLT. Debemos resolver
+      un sistema de ecuaciones de la misma manera que en la anterior práctica (Haciendo \emph{SVD} y tomando la fila asociada al valor singular más pequeño).
+
+      La matriz del sistema está corregida en Hartley \& Ziselmann.
+
+      \begin{lstlisting}
+        Camera::Camera(vector< pair<Point3f, Point2f> > correspondences)
+        {
+          this->camera = Mat::zeros(3, 4, CV_32FC1);
+          Mat A = Mat::zeros(2 * correspondences.size(), 12, CV_32FC1);
+
+          for (unsigned i = 0; i < correspondences.size(); i++)
           {
-            return Mat::zeros(3,3,CV_32FC1);
+            A.at<float>(2 * i, 4) = -correspondences[i].first.x;
+            A.at<float>(2 * i, 5) = -correspondences[i].first.y;
+            A.at<float>(2 * i, 6) = -correspondences[i].first.z;
+            A.at<float>(2 * i, 7) = -1.0;
+            A.at<float>(2 * i, 8) = correspondences[i].second.y * correspondences[i].first.x;
+            A.at<float>(2 * i, 9) = correspondences[i].second.y * correspondences[i].first.y;
+            A.at<float>(2 * i,10) = correspondences[i].second.y * correspondences[i].first.z;
+            A.at<float>(2 * i,11) = correspondences[i].second.y;
+
+            A.at<float>(2 * i + 1, 0) = correspondences[i].first.x;
+            A.at<float>(2 * i + 1, 1) = correspondences[i].first.y;
+            A.at<float>(2 * i + 1, 2) = correspondences[i].first.z;
+            A.at<float>(2 * i + 1, 3) = 1.0;
+            A.at<float>(2 * i + 1, 8) = -correspondences[i].second.x * correspondences[i].first.x;
+            A.at<float>(2 * i + 1, 9) = -correspondences[i].second.x * correspondences[i].first.y;
+            A.at<float>(2 * i + 1,10) = -correspondences[i].second.x * correspondences[i].first.z;
+            A.at<float>(2 * i + 1,11) = -correspondences[i].second.x;
           }
 
-          int num_points = origin.size();
-          int num_equations = 2 * num_points;
+          Mat w, u ,vt;
+          SVD::compute(A, w, u, vt);
 
-          // Fill new matrix with zeros
-          Mat coeffs = Mat::zeros(num_equations, 9, CV_32FC1);
+          for (int i = 0; i < 3; i++)
+        		for (int j = 0; j < 4; j++)
+        			this->camera.at<float>(i, j) = vt.at<float>(11, i * 4 + j);
+        }
 
-          Point ori, dest;
+      \end{lstlisting}
 
-          // Set coeffs of the equation matrix as slides
-          for (int i = 0; i < num_points; i++)
+      Ahora, para valorar la estimación, calcularemos el error de la cámara estimada con
+      respecto a la simulada. Se usa la \emph{Norma de Frobenius cuadrática}.
+
+      \begin{lstlisting}
+        float Camera::error(Camera other)
+        {
+          Mat one = this->camera / this->camera.at<float>(2,2);
+          Mat two = other.camera / other.camera.at<float>(2,2);
+
+          Mat diff = one - two;
+          float error = 0.0;
+
+          for (int i = 0; i < diff.rows; i++)
+            for (int j = 0; j < diff.cols; j++)
+              error += diff.at<float>(i,j) * diff.at<float>(i,j);
+
+          return error;
+        }
+      \end{lstlisting}
+
+      En nuestro caso obtenemos un error de $2.14488 \times 10^{-10}$, lo cual nos muestra
+      que la estimación es muy buena. Prueba de ello es que los puntos se solapan en la imagen.
+      Los puntos están escalados para que no queden todos en la esquina superior izquierda. \\
+
+      \centerline{\includegraphics[width=0.7\textwidth]{CamaraSimulada.png}}
+
+    \section{Calibración de cámara usando homografías}
+
+      El próximo punto de la práctica es calibrar una cámara usando homografías.
+      Para ello buscaremos las esquinas interiores de un tablero similar al de ajedrez aunque más grande.
+
+      \subsection{Buscando esquinas}
+        El primer paso es buscar las esquinas interiores del tablero usando \emph{findChessboardCorners()}.
+        Una vez las tengamos, si forman el patrón deseado (en nuestro caso $13\times12$) refinaremos sus coordenadas
+        e iremos añadiendo dichas imágenes a lo que hemos llamado \emph{imágenes válidas}.
+
+        El tamaño de la ventana de cornerSubPix lo dejamos en lo que se podría llamar por defecto,
+        ya que en muchos ejemplos (tanto de la red como de la propia documentación de \emph{OpenCV})
+        se deja en \emph{Size(5,5)}, y el tamaño zero o zona muerta lo dejamos a cero, \emph{Size(-1,-1)}.
+
+      \begin{lstlisting}
+        const int CHESS_IMAGES = 25;
+        bool valid;
+        vector<Point2f> corners;
+        vector< vector<Point2f> > imagePoints;
+        vector<Mat> images(CHESS_IMAGES);
+        vector<Mat> valid_images;
+        Size patternSize(13,12);
+
+        for (int i = 0; i < CHESS_IMAGES; i++)
+        {
+          images[i] = imread("imagenes/Image" + to_string(i+1) + ".tif", CV_LOAD_IMAGE_GRAYSCALE);
+          valid = cv::findChessboardCorners(images[i], patternSize, corners);
+
+          if (valid)
           {
-            ori = origin[i];
-            dest = destination[i];
-
-            int actual_row = 2 * i;
-            int next_row = actual_row + 1;
-
-            coeffs.at<float>(Point(0,actual_row)) = ori.x;
-            coeffs.at<float>(Point(1,actual_row)) = ori.y;
-            coeffs.at<float>(Point(2,actual_row)) = 1;
-            coeffs.at<float>(Point(6,actual_row)) = -dest.x * ori.x;
-            coeffs.at<float>(Point(7,actual_row)) = -dest.x * ori.y;
-            coeffs.at<float>(Point(8,actual_row)) = -dest.x;
-
-            coeffs.at<float>(Point(3,next_row)) = ori.x;
-            coeffs.at<float>(Point(4,next_row)) = ori.y;
-            coeffs.at<float>(Point(5,next_row)) = 1;
-            coeffs.at<float>(Point(6,next_row)) = -dest.y * ori.x;
-            coeffs.at<float>(Point(7,next_row)) = -dest.y * ori.y;
-            coeffs.at<float>(Point(8,next_row)) = -dest.y;
+            cornerSubPix(images[i], corners, Size(5, 5), Size(-1, -1),
+              TermCriteria());
+            valid_images.push_back(images[i]);
+            imagePoints.push_back(corners);
+            cv::drawChessboardCorners(images[i], patternSize, corners, valid);
           }
-
-          return coeffs;
-        }
-
-        Mat Homography::calcHomography(vector<Point> origin, vector<Point> destination)
-        {
-          // Compute matrix with equation coefficients
-          Mat A = homographyEquationMatrix(origin,destination);
-
-          // Compute SVD of A (http://docs.opencv.org/master/df/df7/classcv_1_1SVD.html#a76f0b2044df458160292045a3d3714c6)
-          Mat w, u, vt;
-        	SVD::compute(A, w, u, vt);
-
-          // Take last col of vt matrix and reorder as 3x3 matrix
-          Mat homography_matrix = Mat(3, 3, CV_32FC1);
-        	for (int i = 0; i < 3; i++)
-          {
-            for (int j = 0; j < 3; j++)
-            {
-        		  homography_matrix.at<float>(Point(j, i)) = vt.at<float>(Point(3*i + j, vt.cols -1 ));
-            }
-        	}
-
-          return homography_matrix;
-        }
-
-        Homography::Homography(vector<Point> origin, vector<Point> destination)
-        {
-          this->homography = this->calcHomography(origin,destination);
-        }
-
-        Mat Homography::getHomography()
-        {
-          return homography;
         }
       \end{lstlisting}
 
+      En nuestro caso se toman $4$ imágenes como válidas, ya que se detecta el patrón, y se muestran
+      por pantalla. \\
 
-      El siguiente paso es aplicar dicha homografía a la primera imagen para obtenerla
-      con la misma proyección que la segunda. Para ello sólo debemos llamar a \textit{warpPerspective}
-      con la homografía calculada anteriormente sobre la imagen base. Así conseguiremos la imagen deseada.
+      \centerline{\includegraphics[width=0.7\textwidth]{Tablero1.png}}
+      \centerline{\includegraphics[width=0.7\textwidth]{Tablero2.png}}
+      \centerline{\includegraphics[width=0.7\textwidth]{Tablero3.png}}
+      \centerline{\includegraphics[width=0.7\textwidth]{Tablero4.png}}
+
+      \subsection{Calibración de la cámara}
+
+      Ahora con los datos obtenidos debemos conseguir una matriz cámara con la función
+      \emph{calibrateCamera}. Nuestros \emph{objectPoints} son una numeración de las esquinas del tablero.
+
+      Los flags de distorsión vienen en la documentación, se ha calibrado la cámara
+      en 4 supuestos: sin distorsión, distorsión radial, distorsión tangencial y
+      todas las distorsiones.
 
       \begin{lstlisting}
-        Image Image::warpPerspective(Homography hom)
-        {
-          Mat output;
-
-          // Using OpenCV warpPerspective with the image
-          cv::warpPerspective(this->image, output, hom.getHomography(), Size(output.cols, output.rows));
-
-          return Image(output, this->name + " warped");
-        }
-      \end{lstlisting}
-
-      \begin{lstlisting}
-        // Making homography using SVD
-        Homography hom(origin, destination);
-      	Image output_good = input.warpPerspective(hom);
-      \end{lstlisting}
-
-    \subsection{Escoger puntos malos y conclusiones}
-
-      Ahora escogemos $10$ puntos en correspondencia agrupados en una esquina, y aplicamos lo mismo.
-      Estos puntos los he coloreado de color rojo.
-
-      \begin{lstlisting}
-        // Another homography using bad points
-        vector<Point> another_origin, another_destination;
-
-      	another_origin.push_back(Point(156,  47));
-      	another_origin.push_back(Point(177,  46));
-      	another_origin.push_back(Point(155,  72));
-      	another_origin.push_back(Point(175,  70));
-      	another_origin.push_back(Point(198,  43));
-      	another_origin.push_back(Point(197,  67));
-      	another_origin.push_back(Point(219,  66));
-      	another_origin.push_back(Point(153,  95));
-      	another_origin.push_back(Point(152, 120));
-      	another_origin.push_back(Point(173, 119));
-
-      	another_destination.push_back(Point(150, 14));
-      	another_destination.push_back(Point(174, 19));
-      	another_destination.push_back(Point(142, 40));
-      	another_destination.push_back(Point(167, 46));
-      	another_destination.push_back(Point(198, 24));
-      	another_destination.push_back(Point(191, 51));
-      	another_destination.push_back(Point(217, 56));
-      	another_destination.push_back(Point(137, 63));
-      	another_destination.push_back(Point(131, 90));
-      	another_destination.push_back(Point(157, 95));
-
-        Homography hom2(another_origin, another_destination);
-      	Image output_bad = input.warpPerspective(hom2);
-      \end{lstlisting}
-
-      Ahora coloreamos los puntos como hemos indicado, dibujamos todas las imágenes en un canvas y vemos los resultados.
-
-      \begin{lstlisting}
-        // Drawing circles on the selected points.
-        // Blue points are good ones, red are bad ones
-        int circle_radius = 10;
-        int circle_thickness = 3;
-
-        for (int i = 0; i < origin.size(); i++)
-        {
-          input.drawCircle(origin[i], circle_radius, Scalar(255,0,0), circle_thickness);
-          dest.drawCircle(destination[i], circle_radius, Scalar(255,0,0), circle_thickness);
+        vector< vector<Point3f> > objectPoints;
+        vector<Point3f> points;
+        for (int i = 0; i < 12; i++) {
+          for (int j = 0; j < 13; j++) {
+            Point3f p = Point3f(j,i,0);
+            points.push_back(p);
+          }
         }
 
-        for (int i = 0; i < another_origin.size(); i++)
+        for (unsigned i = 0; i < valid_images.size(); i++)
         {
-          input.drawCircle(another_origin[i], circle_radius, Scalar(0,0,255), circle_thickness);
-          dest.drawCircle(another_destination[i], circle_radius, Scalar(0,0,255), circle_thickness);
+          objectPoints.push_back(points);
         }
 
-        // Drawing canvas with all images
+        Mat cameraMatrix = Mat(3, 3, CV_32F);
+        Size imageSize(valid_images[0].cols, valid_images[0].rows);
+        Mat distCoeffs = Mat(8, 1, CV_32F);
+        vector< Mat > rotationVectors;
+        vector< Mat > translationVectors;
 
-        vector<Image*> sequence;
-        sequence.push_back(&input);
-        sequence.push_back(&dest);
-        sequence.push_back(&output_good);
-        sequence.push_back(&output_bad);
+        int no_distorsion_flags = CV_CALIB_ZERO_TANGENT_DIST | CV_CALIB_FIX_K1 | CV_CALIB_FIX_K2 | CV_CALIB_FIX_K3;
+        int radial_distorsion_flags = CV_CALIB_ZERO_TANGENT_DIST;
+        int tangential_distorsion_flags = CV_CALIB_FIX_K1 | CV_CALIB_FIX_K2 | CV_CALIB_FIX_K3;
 
-        Image canvas(sequence, 2, 2);
-        canvas.paint();
+        double error_no_distorsion = calibrateCamera(objectPoints, imagePoints, imageSize, cameraMatrix, distCoeffs, rotationVectors, translationVectors, no_distorsion_flags);
+        double error_radial_distorsion = calibrateCamera(objectPoints, imagePoints, imageSize, cameraMatrix, distCoeffs, rotationVectors, translationVectors, radial_distorsion_flags);
+        double error_tangential_distorsion = calibrateCamera(objectPoints, imagePoints, imageSize, cameraMatrix, distCoeffs, rotationVectors, translationVectors, tangential_distorsion_flags);
+        double error_all_distorsion = calibrateCamera(objectPoints, imagePoints, imageSize, cameraMatrix, distCoeffs, rotationVectors, translationVectors, 0);
 
-        waitKey(0);
-        destroyAllWindows();
       \end{lstlisting}
 
-      Los resultados son estos.
+      Los resultados son estos:
 
-      \centerline{\includegraphics[width=0.7\textwidth]{Homography.png}}
+      Error calibrando sin distorsión = 1.3254 \\
+      Error calibrando con distorsión radial = 0.163034 \\
+      Error calibrando con distorsión tangencial = 1.30143 \\
+      Error calibrando con todas las distorsiones = 0.162133 \\
 
-      La primera fila corresponde a las imágenes origen y destino. La segunda fila consta
-      de la imagen creada a partir de los puntos azules (buenos) y por puntos malos, en ese orden.
+      La distorsión tangencial no afecta tanto en esta cámara como la radial, como se puede
+      ver en los errores que introduce cada una de ellas.
 
-      Como se ve, la imagen formada a partir de los puntos buenos es mucho más parecida a la imagen
-      destino que la que tiene todos los puntos agrupados en una esquina. Si dibujamos la imagen transformada buena
-      y la destino en ventanas separadas y ponemos una encima de la otra, vemos que los cuadrados
-      del tablero coinciden perfectamente, por lo que podemos deducir que la homografía estimada es buena.
+  \section{Estimación de la matriz fundamental}
 
+    En esta parte de la práctica tenemos que, usando el detector \emph{BRISK},
+    detectar las regiones relevantes de las imágenes de \emph{Vmort} $1$ y $2$.
+    Además tenemos que calcular sus descriptores en cada \emph{KeyPoint}.
+    Esto ya lo conocemos de la práctica anterior. Se declara el detector \emph{BRISK}
+    con un umbral de $65$ para tomar bastantes correspondencias. Es un poco alto
+    pero se obtienen muy buenos resultados.
 
-  \section{Detección de regiones relevantes y cálculo de descriptores}
-
-    En esta parte de la práctica tenemos que, usando los detectores \textit{BRISK}
-    y \textit{ORB}, detectar las regiones relevantes de las imágenes de \textit{Yosemite} $1$ y $2$.
-    Además tenemos que calcular sus descriptores en cada \textit{KeyPoint}.
-
-    En esta parte de la práctica he escrito código sin usar mi diseño orientado a objetos.
-    Esto es debido a que primero he probado todas las posibilidades descritas en el guión y
-    cuando saque conclusiones, añadiré a mi clase imagen lo que mejor resultados me haya dado.
-
-    Es probable que para distintas imágenes, distintos métodos funciones mejor que otros,
-    pero no es objeto de estas prácticas tener algo tan general y que oscurezca el código y complique
-    demasiado el desarrollo.
-
-    Sólo tenemos que revisar la documentación de OpenCV para hacer el ejercicio, ya que nos lo da todo
-    hecho. Declarar detectores, variables de salida y llamar a las funciones clave. Después, se pintan las regiones relevantes.
-    Las de \textit{BRISK} se pintan en azul y las de \textit{ORB} en rojo.
-
-    Los parámetros usados en \textit{BRISK} están basados en los que vienen por defecto,
-    pero tocados un poco para que tome algunos puntos relevantes más.
+    Después debemos calcular $F$ usando \emph{findFundamentalMat} con las técnicas
+    de los 8 puntos y RANSAC.
 
     \begin{lstlisting}
-      /* Excersice 2 */
-      Mat im = imread("imagenes/yosemite1.jpg");
-      Mat im_2 = imread("imagenes/yosemite2.jpg");
+      // Detect and compute descriptors
+      Ptr<BRISK> ptrBrisk = BRISK::create(65);
 
-      Mat im_copy = im.clone();
-      Mat im_2_copy = im_2.clone();
+      ptrBrisk->detect(vmort[0], keypoints[0]);
+      ptrBrisk->compute(vmort[0], keypoints[0],descriptors[0]);
 
-      vector<KeyPoint> keypointsA[2], keypointsB[2];
-      Mat descriptorsA[2], descriptorsB[2];
+      ptrBrisk->detect(vmort[1], keypoints[1]);
+      ptrBrisk->compute(vmort[1], keypoints[1],descriptors[1]);
 
-      int Threshl=65;
-      int Octaves=3;
-      float PatternScales=1.0f;
+      BFMatcher matcher(NORM_HAMMING, true);
 
-      circle_radius = 5;
-      circle_thickness = 1;
+      vector<DMatch> matches;
 
-      /* BRISK */
-      Ptr<BRISK> ptrBrisk = BRISK::create(Threshl,Octaves,PatternScales);
+      // Match!
+      vector<Point2f> corresp[2];
+      matcher.match(descriptors[0], descriptors[1], matches);
 
-      ptrBrisk->detect(im, keypointsA[0]);
-      ptrBrisk->compute(im, keypointsA[0],descriptorsA[0]);
-
-      ptrBrisk->detect(im_2, keypointsA[1]);
-      ptrBrisk->compute(im_2, keypointsA[1],descriptorsA[1]);
-
-      for (int i = 0; i < keypointsA[0].size(); i++)
+      // Get correspondence points
+      for (int i = 0; i < matches.size(); i++)
       {
-        circle(im,keypointsA[0][i].pt, circle_radius, Scalar(255,0,0), circle_thickness);
+        corresp[0].push_back(keypoints[0][ matches[i].queryIdx ].pt);
+        corresp[1].push_back(keypoints[1][ matches[i].trainIdx ].pt);
       }
 
-      for (int i = 0; i < keypointsA[1].size(); i++)
+      // Compute fundamental matrix
+      vector<unsigned char> taken;
+      Mat F = cv::findFundamentalMat(corresp[0], corresp[1], CV_FM_8POINT | CV_FM_RANSAC, 1, 0.99, taken);
+
+      vector<Point2f> right_corresp[2];
+      for (int i = 0; i < corresp[0].size(); i++)
       {
-        circle(im_2,keypointsA[1][i].pt, circle_radius, Scalar(255,0,0), circle_thickness);
+        if ((int)taken[i] == 1)
+        {
+          right_corresp[0].push_back(corresp[0][i]);
+          right_corresp[1].push_back(corresp[1][i]);
+        }
       }
-
-      /* ORB */
-      Ptr<ORB> ptrORB = ORB::create();
-
-      ptrORB->detect(im_copy, keypointsB[0]);
-      ptrORB->compute(im_copy, keypointsB[0],descriptorsB[0]);
-
-      ptrORB->detect(im_2_copy, keypointsB[1]);
-      ptrORB->compute(im_2_copy, keypointsB[1],descriptorsB[1]);
-
-      for (int i = 0; i < keypointsB[0].size(); i++)
-      {
-        circle(im_copy,keypointsB[0][i].pt, circle_radius, Scalar(0,0,255), circle_thickness);
-      }
-
-      for (int i = 0; i < keypointsB[1].size(); i++)
-      {
-        circle(im_2_copy,keypointsB[1][i].pt, circle_radius, Scalar(0,0,255), circle_thickness);
-      }
-
-      namedWindow("Brisk1", WINDOW_NORMAL);
-      namedWindow("Brisk2", WINDOW_NORMAL);
-
-      imshow("Brisk1", im);
-      imshow("Brisk2", im_2);
-
-      waitKey(0);
-      destroyAllWindows();
-
-      namedWindow("ORB1", WINDOW_NORMAL);
-      namedWindow("ORB2", WINDOW_NORMAL);
-
-      imshow("ORB1",im_copy);
-      imshow("ORB2",im_2_copy);
-      waitKey(0);
-      destroyAllWindows();
     \end{lstlisting}
 
-    Ahora ponemos el resultado
+    El siguiente paso es calculas las líneas epipolares y dibujarlas. Por último
+    se debe calcular el error, que se mide por la media de la distancia entre correspondencia
+    y línea epipolar asociada.
 
-    \centerline{\includegraphics[width=0.7\textwidth]{BRISK.png}}
-    \centerline{\includegraphics[width=0.7\textwidth]{ORB.png}}
+    \begin{lstlisting}
+      // Compute epilines
+      vector<Vec3f> epilines[2];
 
-    En nuestro caso nos decidimos por $BRISK$, ya que ofrece más puntos de referencia
-    además de, en mi opinión, más importantes, como el pico de la montaña o la ladera junto a los árboles.
+      computeCorrespondEpilines(right_corresp[0], 1, F, epilines[1]);
+      computeCorrespondEpilines(right_corresp[1], 2, F, epilines[0]);
 
-    \subsection{Cálculo de correspondencias}
+      double distance = 0.0;
+      int epilineIndex;
 
-      Ahora debemos calcular las correspondencias entre ambas imágenes. Aún seguimos trabajando con ambos detectores.
+      for (epilineIndex = 0; epilineIndex < epilines[0].size() && epilineIndex < 200; epilineIndex++)
+      {
+        Scalar color = Scalar(rng.uniform(0,255), rng.uniform(0, 255), rng.uniform(0, 255));
+        for (int image = 0; image < 2; image++)
+        {
+          Vec3f epiline = epilines[image].at(epilineIndex);
+          Point p = Point(0, -epiline[2] / epiline[1]);
+          Point q = Point(vmort[image].cols, (-epiline[2] - epiline[0] * vmort[image].cols) / epiline[1]);
 
-      Al igual que antes, sólo tenemos que usar la potencia de OpenCV. Algunas cosas a comentar:
+          distance += fabs(epiline[0] * right_corresp[image][epilineIndex].x + epiline[1] * right_corresp[image][epilineIndex].y + epiline[2]) / sqrt(epiline[0]*epiline[0] + epiline[1]*epiline[1]);
 
-      \begin{itemize}
-        \item Los descriptores se transforman a \textit{CV\_32F} para tener compatibilidad con \textit{FlannBasedMatcher}.
-        \item Para \textit{BFMatcher} se utiliza \textit{NORM\_HAMMING} según recomendación de la \fnurl{documentación}{http://docs.opencv.org/master/d3/da1/classcv_1_1BFMatcher.html\#abe0bb11749b30d97f60d6ade665617bd}
-        \item Los argumentos opcionales pasados a \textit{drawMatches} son todos por defecto excepto el último \textit{DrawMatchesFlags::NOT\_DRAW\_SINGLE\_POINTS}, que sirve para no dibujar los KeyPoints sin correspondencias.
-      \end{itemize}
+          line(vmort[image], p, q, color);
+          circle(vmort[image], right_corresp[image][epilineIndex], 5, color);
+        }
+      }
+
+      // Compute average of distance between correspondences and epilines
+      distance /= 2 * (epilineIndex - 1);
+
+    \end{lstlisting}
+
+    En nuestro caso el error medio es $0.384567$, lo cual nos muestra que las correspondencias
+    tomadas han sido medianamente buenas.\\
+
+    \centerline{\includegraphics[width=0.7\textwidth]{Epipolares.png}}
+
+    \section{Cálculo del movimiento de la cámara}
+
+      Ahora debemos calcular los movimientos relativos de cada pareja de cámaras.
+      Para ello se calculan los puntos en correspondencias igual que antes (en este caso se toma
+      un umbral de $35$ para \emph{BRISK} para tomar más correspondencias),
+      se calculan las matrices fundamentales entre cámaras (el orden es 1-2,2-3,1-3), las esenciales, y por último
+      se aplica el algoritmo euclídeo de reconstrucción para reconstruir dichas matrices.
 
       \begin{lstlisting}
-        /* Excersice 3 */
-
-        /* BFMatcher */
-        BFMatcher BFmatcherBRISK(NORM_HAMMING, true);
-        BFMatcher BFmatcherORB(NORM_HAMMING, true);
-
-        vector<DMatch> BFmatchesBRISK, BFmatchesORB;
-
-        // Match!
-        BFmatcherBRISK.match(descriptorsA[0], descriptorsA[1], BFmatchesBRISK);
-        BFmatcherORB.match(descriptorsB[0], descriptorsB[1], BFmatchesORB);
-
-
-        // Draw matches
-        // All parameters are the default ones but no DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS
-        // It prevents drawing keypoints without matches.
-        Mat BFall_matchesBRISK, BFall_matchesORB;
-        drawMatches( im, keypointsA[0], im_2, keypointsA[1],
-                             BFmatchesBRISK, BFall_matchesBRISK, Scalar::all(-1), Scalar::all(-1),
-                             vector<char>(),DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
-
-        drawMatches( im_copy, keypointsB[0], im_2_copy, keypointsB[1],
-                            BFmatchesORB, BFall_matchesORB, Scalar::all(-1), Scalar::all(-1),
-                            vector<char>(),DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
-
-
-        imshow( "BRISK All Matches BFMatcher", BFall_matchesBRISK );
-        imshow( "ORB All Matches BFMatcher", BFall_matchesORB );
-        waitKey(0);
-        destroyAllWindows();
-
-        /* FlannBasedMatcher */
-
-        FlannBasedMatcher FlmatcherBRISK;
-        FlannBasedMatcher FlmatcherORB;
-
-        vector<DMatch> FlmatchesBRISK, FlmatchesORB;
-
-        // Neccesary for FlannBasedMatcher!
-        for (int i = 0; i < 2; i++)
+        // Euclidean reconstruction algorithm!
+        for (unsigned i = 0; i < essentials.size(); i++)
         {
-          descriptorsA[i].convertTo(descriptorsA[i], CV_32F);
+          cout << "Fundamental " << fundamentals[i] << "\n" << endl;
+          Mat E = essentials[i];
+
+          // Normalize
+          Mat eet = E.t() * E;
+          eet /= trace(eet).val[0] / 2;
+          eet = Mat::eye(3,3,CV_64FC1) - eet;
+          E /= sqrt(trace(eet).val[0] / 2);
+
+
+          // Getting translation
+          int max_row = 0;
+          if(eet.at<double>(1,1) > eet.at<double>(0,0))
+            max_row = 1;
+          if(eet.at<double>(2,2) > eet.at<double>(max_row,max_row))
+            max_row = 2;
+
+          Vec3d T(eet.row(max_row));
+          T /= sqrt(eet.at<double>(max_row,max_row));
+
+          Mat R, R1, R2, R3;
+
+          // For each point, recover Z_i and Z_d
+          for (unsigned p = 0; p < corresp[i][0].size(); p++)
+          {
+            Point2d p_i = corresp[i][0][p];
+            Point2d p_d = corresp[i][1][p];
+
+            double x_d = p_d.x;
+
+            double Z_i = -1.0, Z_d = 1.0;
+
+            int i = 1;
+
+            while ((Z_i <= 0.0 || Z_d <= 0.0) && i <= 4)
+            {
+              if ((Z_i < 0.0 && Z_d > 0.0) || (Z_i > 0.0 && Z_d < 0.0))
+              {
+                E = -E;
+
+                // Get w
+                Mat w[3];
+                Mat tmp(T, CV_64FC1);
+                tmp = tmp.t();
+
+                w[0] = E.row(0).cross(tmp);
+                w[1] = E.row(1).cross(tmp);
+                w[2] = E.row(2).cross(tmp);
+
+                R1 = w[0] + w[1].cross(w[2]);
+                R2 = w[1] + w[2].cross(w[0]);
+                R3 = w[2] + w[0].cross(w[1]);
+
+                R = Mat(3,3, CV_64FC1);
+                R1.copyTo(R.row(0));
+                R2.copyTo(R.row(1));
+                R3.copyTo(R.row(2));
+
+                Mat p_hom = Mat(Vec3d(p_i.x, p_i.y, 1.0));
+                Mat T_mat = Mat(T);
+
+                // Get Z_i and Z_d
+                Mat aux = (f_d * R1 - x_d*R3);
+
+                Mat num = aux * T_mat;
+                Mat den = aux * p_hom;
+
+                Mat m_Z_i = f_i * num / den;
+
+                Z_i = m_Z_i.at<double>(0,0);
+
+                Mat pt_3D_i = Z_i * p_hom / f_i;
+
+                Mat m_Z_d = R2 * (pt_3D_i - T_mat);
+                Z_d = m_Z_d.at<double>(0,0);
+
+              }
+
+              if (Z_i < 0.0 && Z_d < 0.0)
+              {
+                T = -T;
+                Mat p_hom = Mat(Vec3d(p_i.x, p_i.y, 1.0));
+                Mat T_mat = Mat(T);
+
+                // Get Z_i and Z_d
+                Mat aux = (f_d * R1 - x_d*R3);
+
+                Mat num = aux * T_mat;
+                Mat den = aux * p_hom;
+
+                Mat m_Z_i = f_i * num / den;
+
+                Z_i = m_Z_i.at<double>(0,0);
+
+                Mat pt_3D_i = Z_i * p_hom / f_i;
+
+                Mat m_Z_d = R2 * (pt_3D_i - T_mat);
+                Z_d = m_Z_d.at<double>(0,0);
+              }
+              i++;
+            }
+
+          }
+
+          if (i >= 5)
+          {
+            cout << "Failed reconstruction!" << endl;
+            return false;
+          }
+
+          Rt.push_back(pair<Mat,Vec3d>(R,T));
         }
-
-        for (int i = 0; i < 2; i++)
-        {
-          descriptorsB[i].convertTo(descriptorsB[i], CV_32F);
-        }
-
-        FlmatcherBRISK.match(descriptorsA[0], descriptorsA[1], FlmatchesBRISK);
-
-        FlmatcherORB.match(descriptorsB[0], descriptorsB[1], FlmatchesORB);
-
-        Mat Flall_matchesBRISK, Flall_matchesORB;
-        drawMatches( im, keypointsA[0], im_2, keypointsA[1],
-                             FlmatchesBRISK, Flall_matchesBRISK, Scalar::all(-1), Scalar::all(-1),
-                             vector<char>(),cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
-
-        drawMatches( im_copy, keypointsB[0], im_2_copy, keypointsB[1],
-                            FlmatchesORB, Flall_matchesORB, Scalar::all(-1), Scalar::all(-1),
-                            vector<char>(),cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
-        imshow( "BRISK All Matches FlannMatcher", Flall_matchesBRISK );
-        imshow( "ORB All Matches FlannMatcher", Flall_matchesORB );
-        waitKey(0);
-        destroyAllWindows();
       \end{lstlisting}
 
-      Los resultados ofrecidos son los siguientes.
-
-      \centerline{\includegraphics[width=0.7\textwidth]{BRISKBF.png}}
-      \centerline{\includegraphics[width=0.7\textwidth]{ORBBF.png}}
-
-
-
-      \centerline{\includegraphics[width=0.7\textwidth]{BRISKFlann.png}}
-      \centerline{\includegraphics[width=0.7\textwidth]{ORBFlann.png}}
-
-  \section {Creación de un panorama}
-
-    Ahora por último sólo nos queda formar un panorama. En un principio se debe hacer
-    para 2 imágenes y luego extrapolarlo a múltiples. Una vez estrapolado lo hemos añadido
-    a la clase \textit{Image} como constructor de la clase, y sirve para un número cualquiera de imágenes.
-
-    El método utiliza todo lo desarrollado arriba (eligiendo $BRISK$ y $BFMatcher$), supone que las imágenes están ordenadas,
-    y una vez teniendo las correspondencias entre imágenes contiguas, hace lo siguiente:
-
-    \begin{enumerate}
-      \item Movemos la imagen central del panorama hacia dentro del canvas, dejando bastante hueco a los lados.
-      \item Para cada imagen a la derecha de la central, se calcula su homografía adecuada y se coloca en el canvas.
-      \item Restauramos la homografía inicial. Para cada imagen a la izquierda de la central, se calcula su homografía adecuada y se coloca en el canvas.
-      \item Recortamos la imagen: Extraemos con el filtro de Canny los bordes y calculamos el rectángulo que los contiene.
-    \end{enumerate}
-
-    El filtro de Canny podría reducirse a un cálculo manual, usar la función \textit{threshold} para cada canal
-    o usar \textit{inRange}. En cualquier caso el tiempo de programación no valdría la pena
-    en relación a la ganancia que obtenemos, ya que las imágenes son pequeñas y utilizamos el filtro de Canny con
-    los valores más permisivos. La función \textit{inRange} nos serviría si pudiéramos utilizar un intervalo abierto,
-    ya que queremos cualquier valor distinto al (0,0,0).
-
-    Los resultados obtenidos son los siguientes.
-
-    \centerline{\includegraphics[width=0.7\textwidth]{YosemitePanorama.png}}
-    \centerline{\includegraphics[width=0.7\textwidth]{ETSIITPanorama.png}}
+      En este caso los resultados no son buenos por algún error en la implementación,
+      ya que la primera matriz de rotación sale rarísima, sus elementos son demasiado
+      grandes. Las demás no tienen mala pinta.
 
 
 \end{document}

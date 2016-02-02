@@ -126,27 +126,28 @@
     \end{array}
     \right) \]
     Aún normalizando la matriz con su traza, siguen apareciendo términos cuadráticos,
-    lo que al ir resolviendo el sistema $$3\times3$$ que sale (tomando cualquier fila o columna de la normalizada)
+    lo que al ir resolviendo el sistema $3\times3$ que sale (tomando cualquier fila o columna de la normalizada)
     dichos términos presentan ambigüedad en su signo al tomar raíces cuadradas, por
     lo que se toma uno cualquiera y después en el \textit{Algoritmo de Reconstrucción Euclídea}
     se corrige. Por el hecho de que se corrige podemos afirmar que no es algo inherente a la reconstrucción.
   \end{solucion}
 
   \begin{cuestion}
-    Verificar matemáticamente que se deben de cumplir las ecuaciones $$ Fe = 0, F^Te'= 0$$
+    Verificar matemáticamente que se deben de cumplir las ecuaciones $Fe = 0, F^Te'= 0$
 
   \end{cuestion}
 
-  \begin{solucion}
-
-      $$\smiley$$
-
-
+  \begin{solucion} % Pag 245 (iii)
+    Según \emph{Hartley \& Zisselman}, para cada punto $x$ distinto de $e$, la línea
+    epipolar $l'=Fx$ contiene el epipolo $e'$. Este epipolo cumple $e'^T(Fx)=(e'^TF)x=0$
+    para cualquier $x$. Esto sólo puede darse si $e'^TF=0$, que significa que $e'$
+    anula a $F^T$ por la izquierda. Análogamente para $e$, se determina que $Fe=0$,
+    anulando $e$ a $F$ por la derecha.
   \end{solucion}
 
   \begin{cuestion}
     Verificar matemáticamente que cuando una cámara se desplaza las coordenadas retina de
-puntos correspondientes sobre la retina deben de verificar la ecuación $$ x' = x + \frac{Kt}{Z} $$
+puntos correspondientes sobre la retina deben de verificar la ecuación $ x' = x + \frac{Kt}{Z} $
 
   \end{cuestion}
 
@@ -155,17 +156,21 @@ puntos correspondientes sobre la retina deben de verificar la ecuación $$ x' = 
   \end{solucion}
 
   \begin{cuestion}
-    Dar una interpretación geométrica a las columnas y filas de la matriz $$P$$ de una cámara.
-
+    Dar una interpretación geométrica a las columnas y filas de la matriz $P$ de una cámara.
   \end{cuestion}
 
-  \begin{solucion}
-    ...
+  \begin{solucion} % Pag 158 Tabla 6.1
+    Según \emph{Hartley \& Zisselman}, las columnas $P_i$ de la matriz de una cámara son
+    los puntos muertos de la imagen en cada uno de los ejes $X$, $Y$, y $Z$. La última fila
+    es la imagen del origen de coordenadas.
+
+    Las filas $1$ y $2$ representan planos en el espacio $x=0$ e $y=0$ que claramente
+    cortan el centro de la cámara. La fila $3$ representa el plano principal de la cámara.
   \end{solucion}
 
   \begin{cuestion}
-    Suponga una matriz $$ A \in \mathcal{M}_{3\times3}$$ de números reales.
-    Suponga $$rango(A)=3$$. ¿Cuál es la matriz esencial más cercana a A en norma de Frobenius?
+    Suponga una matriz $ A \in \mathcal{M}_{3\times3}$ de números reales.
+    Suponga $rango(A)=3$. ¿Cuál es la matriz esencial más cercana a A en norma de Frobenius?
     Argumentar matemáticamente la derivación.
   \end{cuestion}
 
@@ -184,7 +189,7 @@ puntos correspondientes sobre la retina deben de verificar la ecuación $$ x' = 
   \end{solucion}
 
   \begin{cuestion}
-    Deducir la expresión para la matriz Esencial $$E = [t]_x R = R[R^Tt]_x$$.
+    Deducir la expresión para la matriz Esencial $E = [t]_x R = R[R^Tt]_x$.
     Justificar cada uno de los pasos
 
   \end{cuestion}
@@ -199,8 +204,8 @@ puntos correspondientes sobre la retina deben de verificar la ecuación $$ x' = 
   \end{cuestion}
 
   \begin{solucion}
-    Reduzcamos este problema a uno de geometría en $$\mathcal{R}^3$$: Para un
-    punto $$x$$ fijo (punto escena) y dos puntos $$p,q$$ libres en el
+    Reduzcamos este problema a uno de geometría en $\mathcal{R}^3$: Para un
+    punto $x$ fijo (punto escena) y dos puntos $p,q$ libres en el
     espacio (las cámaras), ¿existe siempre un plano (plano epipolar) entre estos 3 puntos?
     La respuesta es clara: no. Si los 3 puntos forman una recta, no pueden formar un plano.
     Estos 3 puntos deben ser linealmente independientes, formar una base. Es un problema
@@ -215,11 +220,12 @@ puntos correspondientes sobre la retina deben de verificar la ecuación $$ x' = 
   \end{cuestion}
 
   \begin{solucion}
-     	Como las cámaras están calibradas, podemos obtener, con el movimiento relativo de
-      la cámara 2 con respecto a la 1, la proyección del punto en la cámara 2. Con esto
-      y reafirmarndo que ambas cámaras están calibradas, podemos aplicar reconstrucción
-      por triangulación, que es el caso simple al conocer todos los datos. 
+     	No, porque teniendo sólo el punto de escena proyectado en una cámara, aún estando
+      calibradas ambas, no podemos conseguir el punto escena proyectado en la otra. Al menos
+      necesitamos las proyecciones del punto escena en ambas cámaras para establecer correspondencias. 
   \end{solucion}
+
+
   \begin{cuestion}
     Suponga que obtiene una foto de una escena y la cámara gira para obtener otra foto ¿Cuál
     es la ecuación que liga las coordenadas de la proyecciones en ambas imágenes, de un mismo
